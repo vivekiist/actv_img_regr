@@ -1,0 +1,7 @@
+*.hypothesis*
+outputs/
+data/Isabel_pressure_raw/
+data/Isabel_pressure_volume_images/train/
+data/Isabel_pressure_volume_images/test/
+*__pycache__*
+*.ipynb_checkpoints*
