@@ -147,6 +147,10 @@ args = load_config()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
 device = torch.device("cuda:0" if args.cuda else "cpu")
 
+timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+args.root_out_dir = os.path.join(args.root_out_dir, timestamp)
+os.makedirs(args.root_out_dir, exist_ok=True)
+
 # set random seed
 np.random.seed(args.seed)
 torch.manual_seed(args.seed)
@@ -344,7 +348,7 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 		run_logger.info('Selected len of uncertain viewparams: %s', len(gen_vparams))
 
 		params = vparams2azel(gen_vparams)
-		pvpythonpath = "../../../paraview_server/ParaView-5.12.0-osmesa-MPI-Linux-Python3.10-x86_64/bin/pvpython"
+		pvpythonpath = "../../ParaView-5.12.0-osmesa-MPI-Linux-Python3.10-x86_64/bin/pvpython"
 		gen_img_script_path = "./gen_img.py"
 
 		phi_new_batch = []

@@ -1,200 +1,73 @@
-2024-04-08 14:11:06,714 - INFO - run_logger - Epoch: 100
-2024-04-08 14:11:11,361 - INFO - run_logger - Epoch: 101
-2024-04-08 14:11:15,640 - INFO - run_logger - Epoch: 102
-2024-04-08 14:11:19,962 - INFO - run_logger - Epoch: 103
-2024-04-08 14:11:24,338 - INFO - run_logger - Epoch: 104
-2024-04-08 14:11:28,745 - INFO - run_logger - Epoch: 105
-2024-04-08 14:11:33,033 - INFO - run_logger - Epoch: 106
-2024-04-08 14:11:37,295 - INFO - run_logger - Epoch: 107
-2024-04-08 14:11:41,628 - INFO - run_logger - Epoch: 108
-2024-04-08 14:11:45,942 - INFO - run_logger - Epoch: 109
-2024-04-08 14:11:51,578 - INFO - run_logger - Epoch: 110
-2024-04-08 14:11:56,254 - INFO - run_logger - Epoch: 111
-2024-04-08 14:12:00,718 - INFO - run_logger - Epoch: 112
-2024-04-08 14:12:05,093 - INFO - run_logger - Epoch: 113
-2024-04-08 14:12:09,494 - INFO - run_logger - Epoch: 114
-2024-04-08 14:12:13,836 - INFO - run_logger - Epoch: 115
-2024-04-08 14:12:18,188 - INFO - run_logger - Epoch: 116
-2024-04-08 14:12:22,529 - INFO - run_logger - Epoch: 117
-2024-04-08 14:12:26,959 - INFO - run_logger - Epoch: 118
-2024-04-08 14:12:31,397 - INFO - run_logger - Epoch: 119
-2024-04-08 14:12:37,110 - INFO - run_logger - Epoch: 120
-2024-04-08 14:12:41,837 - INFO - run_logger - Epoch: 121
-2024-04-08 14:12:46,176 - INFO - run_logger - Epoch: 122
-2024-04-08 14:12:50,568 - INFO - run_logger - Epoch: 123
-2024-04-08 14:12:54,973 - INFO - run_logger - Epoch: 124
-2024-04-08 14:12:59,338 - INFO - run_logger - Epoch: 125
-2024-04-08 14:13:03,720 - INFO - run_logger - Epoch: 126
-2024-04-08 14:13:08,265 - INFO - run_logger - Epoch: 127
-2024-04-08 14:13:12,657 - INFO - run_logger - Epoch: 128
-2024-04-08 14:13:17,035 - INFO - run_logger - Epoch: 129
-2024-04-08 14:13:22,688 - INFO - run_logger - Epoch: 130
-2024-04-08 14:13:27,472 - INFO - run_logger - Epoch: 131
-2024-04-08 14:13:31,859 - INFO - run_logger - Epoch: 132
-2024-04-08 14:13:36,183 - INFO - run_logger - Epoch: 133
-2024-04-08 14:13:40,563 - INFO - run_logger - Epoch: 134
-2024-04-08 14:13:44,893 - INFO - run_logger - Epoch: 135
-2024-04-08 14:13:49,335 - INFO - run_logger - Epoch: 136
-2024-04-08 14:13:53,664 - INFO - run_logger - Epoch: 137
-2024-04-08 14:13:57,993 - INFO - run_logger - Epoch: 138
-2024-04-08 14:14:02,372 - INFO - run_logger - Epoch: 139
-2024-04-08 14:14:07,980 - INFO - run_logger - Epoch: 140
-2024-04-08 14:14:12,722 - INFO - run_logger - Epoch: 141
-2024-04-08 14:14:17,090 - INFO - run_logger - Epoch: 142
-2024-04-08 14:14:21,492 - INFO - run_logger - Epoch: 143
-2024-04-08 14:14:25,952 - INFO - run_logger - Epoch: 144
-2024-04-08 14:14:30,324 - INFO - run_logger - Epoch: 145
-2024-04-08 14:14:34,697 - INFO - run_logger - Epoch: 146
-2024-04-08 14:14:39,064 - INFO - run_logger - Epoch: 147
-2024-04-08 14:14:43,549 - INFO - run_logger - Epoch: 148
-2024-04-08 14:14:48,013 - INFO - run_logger - Epoch: 149
-2024-04-08 14:14:53,667 - INFO - run_logger - Epoch: 150
-2024-04-08 14:14:58,412 - INFO - run_logger - Epoch: 151
-2024-04-08 14:15:02,780 - INFO - run_logger - Epoch: 152
-2024-04-08 14:15:07,124 - INFO - run_logger - Epoch: 153
-2024-04-08 14:15:11,513 - INFO - run_logger - Epoch: 154
-2024-04-08 14:15:15,906 - INFO - run_logger - Epoch: 155
-2024-04-08 14:15:20,314 - INFO - run_logger - Epoch: 156
-2024-04-08 14:15:24,732 - INFO - run_logger - Epoch: 157
-2024-04-08 14:15:29,130 - INFO - run_logger - Epoch: 158
-2024-04-08 14:15:33,520 - INFO - run_logger - Epoch: 159
-2024-04-08 14:15:39,144 - INFO - run_logger - Epoch: 160
-2024-04-08 14:15:43,972 - INFO - run_logger - Epoch: 161
-2024-04-08 14:15:48,375 - INFO - run_logger - Epoch: 162
-2024-04-08 14:15:52,850 - INFO - run_logger - Epoch: 163
-2024-04-08 14:15:57,217 - INFO - run_logger - Epoch: 164
-2024-04-08 14:16:01,656 - INFO - run_logger - Epoch: 165
-2024-04-08 14:16:06,085 - INFO - run_logger - Epoch: 166
-2024-04-08 14:16:10,430 - INFO - run_logger - Epoch: 167
-2024-04-08 14:16:14,809 - INFO - run_logger - Epoch: 168
-2024-04-08 14:16:19,143 - INFO - run_logger - Epoch: 169
-2024-04-08 14:16:24,883 - INFO - run_logger - Epoch: 170
-2024-04-08 14:16:29,732 - INFO - run_logger - Epoch: 171
-2024-04-08 14:16:34,125 - INFO - run_logger - Epoch: 172
-2024-04-08 14:16:38,566 - INFO - run_logger - Epoch: 173
-2024-04-08 14:16:42,950 - INFO - run_logger - Epoch: 174
-2024-04-08 14:16:47,293 - INFO - run_logger - Epoch: 175
-2024-04-08 14:16:51,697 - INFO - run_logger - Epoch: 176
-2024-04-08 14:16:56,059 - INFO - run_logger - Epoch: 177
-2024-04-08 14:17:00,420 - INFO - run_logger - Epoch: 178
-2024-04-08 14:17:04,844 - INFO - run_logger - Epoch: 179
-2024-04-08 14:17:10,477 - INFO - run_logger - Epoch: 180
-2024-04-08 14:17:15,176 - INFO - run_logger - Epoch: 181
-2024-04-08 14:17:19,569 - INFO - run_logger - Epoch: 182
-2024-04-08 14:17:23,947 - INFO - run_logger - Epoch: 183
-2024-04-08 14:17:28,296 - INFO - run_logger - Epoch: 184
-2024-04-08 14:17:32,740 - INFO - run_logger - Epoch: 185
-2024-04-08 14:17:37,193 - INFO - run_logger - Epoch: 186
-2024-04-08 14:17:41,605 - INFO - run_logger - Epoch: 187
-2024-04-08 14:17:45,979 - INFO - run_logger - Epoch: 188
-2024-04-08 14:17:50,436 - INFO - run_logger - Epoch: 189
-2024-04-08 14:17:56,004 - INFO - run_logger - Epoch: 190
-2024-04-08 14:18:00,768 - INFO - run_logger - Epoch: 191
-2024-04-08 14:18:05,124 - INFO - run_logger - Epoch: 192
-2024-04-08 14:18:09,569 - INFO - run_logger - Epoch: 193
-2024-04-08 14:18:13,977 - INFO - run_logger - Epoch: 194
-2024-04-08 14:18:18,349 - INFO - run_logger - Epoch: 195
-2024-04-08 14:18:22,752 - INFO - run_logger - Epoch: 196
-2024-04-08 14:18:27,200 - INFO - run_logger - Epoch: 197
-2024-04-08 14:18:31,660 - INFO - run_logger - Epoch: 198
-2024-04-08 14:18:36,397 - INFO - run_logger - Epoch: 199
-2024-04-09 00:06:58,083 - INFO - run_logger - Epoch: 0
-2024-04-09 00:07:02,751 - INFO - run_logger - Epoch: 1
-2024-04-09 00:07:07,228 - INFO - run_logger - Epoch: 2
-2024-04-09 00:07:11,770 - INFO - run_logger - Epoch: 3
-2024-04-09 00:07:16,261 - INFO - run_logger - Epoch: 4
-2024-04-09 00:07:20,794 - INFO - run_logger - Epoch: 5
-2024-04-09 00:07:25,282 - INFO - run_logger - Epoch: 6
-2024-04-09 00:07:29,767 - INFO - run_logger - Epoch: 7
-2024-04-09 00:07:34,260 - INFO - run_logger - Epoch: 8
-2024-04-09 00:07:38,749 - INFO - run_logger - Epoch: 9
-2024-04-09 00:07:43,447 - INFO - run_logger - Epoch: 10
-2024-04-09 00:07:48,255 - INFO - run_logger - Epoch: 11
-2024-04-09 00:07:52,892 - INFO - run_logger - Epoch: 12
-2024-04-09 00:07:57,525 - INFO - run_logger - Epoch: 13
-2024-04-09 00:08:02,124 - INFO - run_logger - Epoch: 14
-2024-04-09 00:08:06,733 - INFO - run_logger - Epoch: 15
-2024-04-09 00:08:11,302 - INFO - run_logger - Epoch: 16
-2024-04-09 00:08:15,865 - INFO - run_logger - Epoch: 17
-2024-04-09 00:08:20,440 - INFO - run_logger - Epoch: 18
-2024-04-09 00:08:24,965 - INFO - run_logger - Epoch: 19
-2024-04-09 00:08:30,755 - INFO - run_logger - Epoch: 20
-2024-04-09 00:08:35,457 - INFO - run_logger - Epoch: 21
-2024-04-09 00:08:39,993 - INFO - run_logger - Epoch: 22
-2024-04-09 00:08:44,622 - INFO - run_logger - Epoch: 23
-2024-04-09 00:08:49,211 - INFO - run_logger - Epoch: 24
-2024-04-09 00:08:53,759 - INFO - run_logger - Epoch: 25
-2024-04-09 00:08:58,374 - INFO - run_logger - Epoch: 26
-2024-04-09 00:09:02,998 - INFO - run_logger - Epoch: 27
-2024-04-09 00:09:07,528 - INFO - run_logger - Epoch: 28
-2024-04-09 00:09:12,083 - INFO - run_logger - Epoch: 29
-2024-04-09 00:09:16,899 - INFO - run_logger - Epoch: 30
-2024-04-09 00:09:21,674 - INFO - run_logger - Epoch: 31
-2024-04-09 00:09:26,191 - INFO - run_logger - Epoch: 32
-2024-04-09 00:09:30,778 - INFO - run_logger - Epoch: 33
-2024-04-09 00:09:35,404 - INFO - run_logger - Epoch: 34
-2024-04-09 00:09:39,982 - INFO - run_logger - Epoch: 35
-2024-04-09 00:09:44,583 - INFO - run_logger - Epoch: 36
-2024-04-09 00:09:49,214 - INFO - run_logger - Epoch: 37
-2024-04-09 00:09:53,849 - INFO - run_logger - Epoch: 38
-2024-04-09 00:09:58,405 - INFO - run_logger - Epoch: 39
-2024-04-09 00:10:04,088 - INFO - run_logger - Epoch: 40
-2024-04-09 00:10:08,869 - INFO - run_logger - Epoch: 41
-2024-04-09 00:10:13,457 - INFO - run_logger - Epoch: 42
-2024-04-09 00:10:18,115 - INFO - run_logger - Epoch: 43
-2024-04-09 00:10:22,731 - INFO - run_logger - Epoch: 44
-2024-04-09 00:10:27,279 - INFO - run_logger - Epoch: 45
-2024-04-09 00:10:31,855 - INFO - run_logger - Epoch: 46
-2024-04-09 00:10:36,467 - INFO - run_logger - Epoch: 47
-2024-04-09 00:10:41,068 - INFO - run_logger - Epoch: 48
-2024-04-09 00:10:45,688 - INFO - run_logger - Epoch: 49
-2024-04-09 00:10:50,404 - INFO - run_logger - Epoch: 50
-2024-04-09 00:10:55,336 - INFO - run_logger - Epoch: 51
-2024-04-09 00:10:59,963 - INFO - run_logger - Epoch: 52
-2024-04-09 00:11:04,558 - INFO - run_logger - Epoch: 53
-2024-04-09 00:11:09,140 - INFO - run_logger - Epoch: 54
-2024-04-09 00:11:13,767 - INFO - run_logger - Epoch: 55
-2024-04-09 00:11:18,401 - INFO - run_logger - Epoch: 56
-2024-04-09 00:11:22,987 - INFO - run_logger - Epoch: 57
-2024-04-09 00:11:27,563 - INFO - run_logger - Epoch: 58
-2024-04-09 00:11:32,160 - INFO - run_logger - Epoch: 59
-2024-04-09 00:11:37,785 - INFO - run_logger - Epoch: 60
-2024-04-09 00:11:42,623 - INFO - run_logger - Epoch: 61
-2024-04-09 00:11:47,224 - INFO - run_logger - Epoch: 62
-2024-04-09 00:11:51,828 - INFO - run_logger - Epoch: 63
-2024-04-09 00:11:56,358 - INFO - run_logger - Epoch: 64
-2024-04-09 00:12:00,996 - INFO - run_logger - Epoch: 65
-2024-04-09 00:12:05,548 - INFO - run_logger - Epoch: 66
-2024-04-09 00:12:10,157 - INFO - run_logger - Epoch: 67
-2024-04-09 00:12:14,843 - INFO - run_logger - Epoch: 68
-2024-04-09 00:12:19,463 - INFO - run_logger - Epoch: 69
-2024-04-09 00:12:24,243 - INFO - run_logger - Epoch: 70
-2024-04-09 00:12:29,074 - INFO - run_logger - Epoch: 71
-2024-04-09 00:12:33,705 - INFO - run_logger - Epoch: 72
-2024-04-09 00:12:38,395 - INFO - run_logger - Epoch: 73
-2024-04-09 00:12:42,982 - INFO - run_logger - Epoch: 74
-2024-04-09 00:12:47,676 - INFO - run_logger - Epoch: 75
-2024-04-09 00:12:52,256 - INFO - run_logger - Epoch: 76
-2024-04-09 00:12:56,804 - INFO - run_logger - Epoch: 77
-2024-04-09 00:13:01,375 - INFO - run_logger - Epoch: 78
-2024-04-09 00:13:06,025 - INFO - run_logger - Epoch: 79
-2024-04-09 00:13:11,484 - INFO - run_logger - Epoch: 80
-2024-04-09 00:13:16,233 - INFO - run_logger - Epoch: 81
-2024-04-09 00:13:20,803 - INFO - run_logger - Epoch: 82
-2024-04-09 00:13:25,412 - INFO - run_logger - Epoch: 83
-2024-04-09 00:13:30,043 - INFO - run_logger - Epoch: 84
-2024-04-09 00:13:34,638 - INFO - run_logger - Epoch: 85
-2024-04-09 00:13:39,206 - INFO - run_logger - Epoch: 86
-2024-04-09 00:13:43,898 - INFO - run_logger - Epoch: 87
-2024-04-09 00:13:48,570 - INFO - run_logger - Epoch: 88
-2024-04-09 00:13:53,177 - INFO - run_logger - Epoch: 89
-2024-04-09 00:13:57,803 - INFO - run_logger - Epoch: 90
-2024-04-09 00:14:02,542 - INFO - run_logger - Epoch: 91
-2024-04-09 00:14:07,192 - INFO - run_logger - Epoch: 92
-2024-04-09 00:14:11,811 - INFO - run_logger - Epoch: 93
-2024-04-09 00:14:16,393 - INFO - run_logger - Epoch: 94
-2024-04-09 00:14:21,029 - INFO - run_logger - Epoch: 95
-2024-04-09 00:14:25,605 - INFO - run_logger - Epoch: 96
-2024-04-09 00:14:30,209 - INFO - run_logger - Epoch: 97
-2024-04-09 00:14:34,792 - INFO - run_logger - Epoch: 98
-2024-04-09 00:14:39,482 - INFO - run_logger - Epoch: 99
+2024-04-13 17:26:01,258 - INFO - run_logger - Epoch: 100
+2024-04-13 17:26:02,664 - INFO - run_logger - Selected uncertain samples: [179 164]
+2024-04-13 17:26:02,665 - INFO - run_logger - Selected uncertain viewparams: [[83.59291613101959, 159.0312305666435], [88.52682888507843, -173.55965665773073]]
+2024-04-13 17:26:02,666 - INFO - run_logger - Selected len of uncertain samples: 2
+2024-04-13 17:26:02,666 - INFO - run_logger - Selected len of uncertain viewparams: 2
+2024-04-13 17:26:02,666 - INFO - run_logger - Generating image for phi: 82.76313617804533, theta: 161.23447550106508
+2024-04-13 17:26:07,829 - INFO - run_logger - Generating image for phi: 83.52797263325188, theta: -175.53633093141232
+2024-04-13 17:26:12,393 - INFO - run_logger - Train dataset length: 514
+2024-04-13 17:27:15,890 - INFO - run_logger - Epoch: 100
+2024-04-13 17:27:17,196 - INFO - run_logger - Selected uncertain samples: [231 147]
+2024-04-13 17:27:17,198 - INFO - run_logger - Selected uncertain viewparams: [[83.52797448635101, -175.5363310425665], [88.52682888507843, -173.55965665773073]]
+2024-04-13 17:27:17,199 - INFO - run_logger - Selected len of uncertain samples: 2
+2024-04-13 17:27:17,199 - INFO - run_logger - Selected len of uncertain viewparams: 2
+2024-04-13 17:27:17,199 - INFO - run_logger - Generating image for phi: 82.69819453337675, theta: -173.33308610814493
+2024-04-13 17:27:21,763 - INFO - run_logger - Generating image for phi: 83.52797263325188, theta: -175.53633093141232
+2024-04-13 17:27:26,294 - INFO - run_logger - Train dataset length: 516
+2024-04-13 17:27:31,373 - INFO - run_logger - Epoch: 101
+2024-04-13 17:27:32,640 - INFO - run_logger - Selected uncertain samples: [226 502]
+2024-04-13 17:27:32,640 - INFO - run_logger - Selected uncertain viewparams: [[83.52797448635101, -175.5363310425665], [88.52682888507843, -173.55965665773073]]
+2024-04-13 17:27:32,641 - INFO - run_logger - Selected len of uncertain samples: 2
+2024-04-13 17:27:32,641 - INFO - run_logger - Selected len of uncertain viewparams: 2
+2024-04-13 17:27:32,641 - INFO - run_logger - Generating image for phi: 79.99553339452214, theta: -179.6129450948785
+2024-04-13 17:27:37,116 - INFO - run_logger - Generating image for phi: 85.38943099885513, theta: -175.10404938730025
+2024-04-13 17:27:41,639 - INFO - run_logger - Train dataset length: 518
+2024-04-13 17:27:46,034 - INFO - run_logger - Epoch: 102
+2024-04-13 17:27:47,325 - INFO - run_logger - Selected uncertain samples: [481  25]
+2024-04-13 17:27:47,326 - INFO - run_logger - Selected uncertain viewparams: [[11.736574172973633, -2.112771534656938], [13.283261954784393, 4.721344221710195]]
+2024-04-13 17:27:47,326 - INFO - run_logger - Selected len of uncertain samples: 2
+2024-04-13 17:27:47,326 - INFO - run_logger - Selected len of uncertain viewparams: 2
+2024-04-13 17:27:47,326 - INFO - run_logger - Generating image for phi: 10.704248915280331, theta: -1.7246041946233683
+2024-04-13 17:27:51,845 - INFO - run_logger - Generating image for phi: 12.475207098817341, theta: 6.5735392256777905
+2024-04-13 17:27:56,432 - INFO - run_logger - Train dataset length: 520
+2024-04-13 17:29:11,108 - INFO - run_logger - Epoch: 100
+2024-04-13 17:29:12,416 - INFO - run_logger - Selected uncertain samples: [208 184]
+2024-04-13 17:29:12,418 - INFO - run_logger - Selected uncertain viewparams: [[88.52682888507843, -173.55965665773073], [85.38943290710449, -175.1040493050684]]
+2024-04-13 17:29:12,418 - INFO - run_logger - Selected len of uncertain samples: 2
+2024-04-13 17:29:12,418 - INFO - run_logger - Selected len of uncertain viewparams: 2
+2024-04-13 17:29:12,418 - INFO - run_logger - Generating image for phi: 87.69704893210417, theta: -171.35641172330915
+2024-04-13 17:29:16,931 - INFO - run_logger - Generating image for phi: 80.39057665527794, theta: -177.08072357875
+2024-04-13 17:29:21,416 - INFO - run_logger - Train dataset length: 522
+2024-04-13 17:29:26,340 - INFO - run_logger - Epoch: 101
+2024-04-13 17:29:27,579 - INFO - run_logger - Selected uncertain samples: [490 445]
+2024-04-13 17:29:27,579 - INFO - run_logger - Selected uncertain viewparams: [[88.52682888507843, -173.55965665773073], [85.38943290710449, -175.1040493050684]]
+2024-04-13 17:29:27,580 - INFO - run_logger - Selected len of uncertain samples: 2
+2024-04-13 17:29:27,580 - INFO - run_logger - Selected len of uncertain viewparams: 2
+2024-04-13 17:29:27,580 - INFO - run_logger - Generating image for phi: 84.99438779324956, theta: -177.63627071004274
+2024-04-13 17:29:32,094 - INFO - run_logger - Generating image for phi: 82.2520350208812, theta: -176.64844203463792
+2024-04-13 17:29:36,695 - INFO - run_logger - Train dataset length: 524
+2024-04-13 17:29:40,995 - INFO - run_logger - Epoch: 102
+2024-04-13 17:29:42,236 - INFO - run_logger - Selected uncertain samples: [ 74 377]
+2024-04-13 17:29:42,237 - INFO - run_logger - Selected uncertain viewparams: [[13.283261954784393, 4.721344221710195], [12.475207597017288, 6.573539361406541]]
+2024-04-13 17:29:42,237 - INFO - run_logger - Selected len of uncertain samples: 2
+2024-04-13 17:29:42,237 - INFO - run_logger - Selected len of uncertain viewparams: 2
+2024-04-13 17:29:42,238 - INFO - run_logger - Generating image for phi: 12.250936697091092, theta: 5.109511561743765
+2024-04-13 17:29:46,755 - INFO - run_logger - Generating image for phi: 11.667152741050236, theta: 8.425734365374137
+2024-04-13 17:29:51,349 - INFO - run_logger - Train dataset length: 526
+2024-04-13 17:29:55,758 - INFO - run_logger - Epoch: 103
+2024-04-13 17:29:57,016 - INFO - run_logger - Selected uncertain samples: [ 47 174]
+2024-04-13 17:29:57,016 - INFO - run_logger - Selected uncertain viewparams: [[5.235149636864662, 5.819843179081398], [11.667153239250183, 8.42573471874139]]
+2024-04-13 17:29:57,016 - INFO - run_logger - Selected len of uncertain samples: 2
+2024-04-13 17:29:57,017 - INFO - run_logger - Selected len of uncertain viewparams: 2
+2024-04-13 17:29:57,017 - INFO - run_logger - Generating image for phi: 2.2796721341798367, theta: 9.601017542990853
+2024-04-13 17:30:01,563 - INFO - run_logger - Generating image for phi: 6.941029171229445, theta: 10.130409820525411
+2024-04-13 17:30:06,084 - INFO - run_logger - Train dataset length: 528
+2024-04-13 17:30:10,440 - INFO - run_logger - Epoch: 104
+2024-04-13 17:30:11,737 - INFO - run_logger - Selected uncertain samples: [453 144]
+2024-04-13 17:30:11,738 - INFO - run_logger - Selected uncertain viewparams: [[10.704248920083046, -1.7246042427027095], [5.235149636864662, 5.819843179081398]]
+2024-04-13 17:30:11,739 - INFO - run_logger - Selected len of uncertain samples: 2
+2024-04-13 17:30:11,739 - INFO - run_logger - Selected len of uncertain viewparams: 2
+2024-04-13 17:30:11,739 - INFO - run_logger - Generating image for phi: 9.877296943754317, theta: -1.1377059582451927
+2024-04-13 17:30:16,255 - INFO - run_logger - Generating image for phi: 1.639019022817, theta: 2.800858069930186
+2024-04-13 17:30:20,870 - INFO - run_logger - Train dataset length: 530
+2024-04-13 17:30:25,598 - INFO - run_logger - Epoch: 105
