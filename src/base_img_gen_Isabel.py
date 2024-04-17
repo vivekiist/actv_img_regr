@@ -14,7 +14,7 @@ def isabel_pressure_volume():
 	pf25binLEraw_corrected_2_subsampledvti.PointArrayStatus = ['ImageScalars']
 
 	## regular sampled phi,theta vals
-	num_samples = 10000
+	num_samples = 1000
 
 	## Now generate all the images and save their param values also
 	###################################################################

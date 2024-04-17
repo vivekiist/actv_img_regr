@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+import json
 
 import torch
 import torch.nn as nn
@@ -348,8 +349,7 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 		run_logger.info('Selected len of uncertain viewparams: %s', len(gen_vparams))
 
 		params = vparams2azel(gen_vparams)
-		pvpythonpath = "../../ParaView-5.12.0-osmesa-MPI-Linux-Python3.10-x86_64/bin/pvpython"
-		gen_img_script_path = "./gen_img.py"
+		pvpythonpath = "../../ParaView-5.12.0-egl-MPI-Linux-Python3.10-x86_64/bin/pvbatch"
 
 		phi_new_batch = []
 		theta_new_batch = []  
@@ -360,10 +360,14 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 			phi_new_batch.append(phi_value)
 			theta_new_batch.append(theta_value)
 			run_logger.info('Generating image for phi: %s, theta: %s', phi_value, theta_value)
-			subprocess.run([pvpythonpath, gen_img_script_path, '--inFile', args.raw_inp_file, '--varName', args.varname, '--phi_val', str(phi_value), '--theta_val', str(theta_value), '--outPath', args.root_dir_train])
-		new_data = pd.DataFrame({'phi': phi_new_batch, 'theta': theta_new_batch})
-		
+			# subprocess.run([pvpythonpath, gen_img_script_path, '--inFile', args.raw_inp_file, '--varName', args.varname, '--phi_val', str(phi_value), '--theta_val', str(theta_value), '--outPath', args.root_dir_train])
+		phi_theta_pairs = json.dumps(list(zip(phi_new_batch, theta_new_batch)))
+		# phi_theta_pairs = np.column_stack((phi_new_batch, theta_new_batch))
+		# phi_theta_pairs = json.dumps(phi_theta_pairs)
+		subprocess.run([pvpythonpath, args.data_gen_script, '--inFile', args.raw_inp_file, '--varName', args.varname, '--view_params', phi_theta_pairs, '--outPath', args.root_dir_train])
+
 		# Add newly generated data to the train dataset
+		new_data = pd.DataFrame({'phi': phi_new_batch, 'theta': theta_new_batch})
 		train_dataset.add_samples(new_data)
 
 		# Update the train dataloader
@@ -374,7 +378,7 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 		print(len(train_dataset))
 
 		### generate scatterplot of new modified param space
-		if epoch % 10 == 0:
+		if (epoch % 10 == 0  or epoch == args.epochs-1):
 			indata_train = np.loadtxt(os.path.join(train_dataset.root, train_dataset.param_file),delimiter=',')
 			plt.figure(figsize=(10,10))
 			plt.scatter(indata_train[:,0], indata_train[:,1],c='r',s=1)

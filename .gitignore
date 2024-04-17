@@ -7,6 +7,7 @@ data/Isabel_pressure_volume_images/test/
 *.ipynb_checkpoints*
 data/chk_99.pth.tar
 data/model_99.pth
+src/isabel_pressure_volume.prof
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

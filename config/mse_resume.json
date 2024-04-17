@@ -30,7 +30,7 @@
 	"log_every" : 2,
 	"check_every" : 50,
 	"no_active_learning" : false,
-    "data_gen_script" : "./gen_img.py",
+    "data_gen_script" : "./gen_img4.py",
     "raw_inp_file" : "../data/Isabel_pressure_raw/Pf25.binLE.raw_corrected_2_subsampled.vti",
 	"varname" : "ImageScalars",
 	"num_new_samples" : 100,

@@ -1,1 +1,1 @@
-# actv_img_regr
+# Active Image Regression
