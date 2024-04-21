@@ -215,7 +215,8 @@ if args.use_vgg_loss:
 	vgg.to(device)
 	main_logger.info('VGG model initialised.')
 
-mse_criterion = nn.MSELoss()
+# mse_criterion = nn.MSELoss()
+mse_criterion = nn.MSELoss(reduction='mean')
 train_losses, test_losses = [], []
 d_losses, g_losses = [], []
 main_logger.info('MSE loss initialised.')
@@ -328,13 +329,14 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 
 		# log training status
 		if i % args.log_every == 0:
-			print(f"Train Epoch: {epoch} [{i*args.batch_size}/{len(train_loader.dataset)} ({100. * i / len(train_loader):.0f}%)]\tLoss: {loss.item():.6f}")
+			print(f"Train Epoch: {epoch} [Batch {i}/{len(train_loader)} ({100. * i / len(train_loader):.2f}%)]\tLoss: {(loss.item()):.6f}")
 			if args.use_gan_loss:
 				print(f"DLoss: {d_loss.item():.6f}, GLoss: {g_loss.item():.6f}")
 				d_losses.append(d_loss.item())
 				g_losses.append(g_loss.item())
 			train_losses.append(loss.item())
-
+			
+	print(f"====> Epoch: {epoch} Average loss: {(sum(train_losses[-len(train_loader):])/len(train_loader)):.4f}")
 	run_logger.info('Epoch: %s', epoch)
     ##########################################
     ## Active learning section
@@ -375,7 +377,7 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 								shuffle=True, **kwargs)
 
 		run_logger.info('Train dataset length: %s', len(train_dataset))
-		print(len(train_dataset))
+		print(f"Length of Train Dataset: {len(train_dataset)}")
 
 		### generate scatterplot of new modified param space
 		if (epoch % 10 == 0  or epoch == args.epochs-1):
@@ -397,7 +399,8 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 			image = sample["image"].to(device)
 			vparams = sample["vparams"].to(device)
 			fake_image = g_model(vparams)
-			test_loss += mse_criterion(image, fake_image).item() * len(vparams)
+			# test_loss += mse_criterion(image, fake_image).item() * len(image)
+			test_loss += mse_criterion(image, fake_image).item()
 
 			if (epoch%10 == 0 or epoch == args.epochs-1) and i == 0: #save comparison every 10th epoch & last epoch & first batch
 				n = min(args.batch_size, 8)
@@ -409,9 +412,10 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 				fname = os.path.join(comparison_dir, 'test_' + str(epoch) + '_batch_' + str(i) + ".png")
 				save_image(((comparison.cpu() + 1.) * .5),
 							fname, nrow=n)
-
-	test_losses.append(test_loss / len(test_loader.dataset))
-	print(f"====> Epoch: {epoch} Test set loss: {test_losses[-1]:.4f}")
+			test_losses.append(test_loss)
+			print (f"Test set loss for epoch {epoch}, batch {i} is {test_loss}")
+	avg = sum(test_losses[-len(test_loader):])/len(test_loader)
+	print(f"====> Epoch: {epoch} Average for Test set loss: {avg:.4f}\n\n")
 	# saving...
 	if ((epoch+1) % args.check_every) == 0:
 		print("=> saving checkpoint at epoch {}".format(epoch+1))

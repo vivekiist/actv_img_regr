@@ -73,8 +73,8 @@ def isabel_pressure_volume(args):
 
 	camera=GetActiveCamera()
 	for i in range(len(phi_theta_pairs)):
-		if i%10 == 0:
-			print ('generating sample: ' + str(i))
+		# if i%10 == 0:
+		# 	print ('generating sample: ' + str(i))
 		renderView1.ResetCamera()
 		camera.Elevation(phi_values[i]) 
 		camera.Azimuth(theta_values[i])
@@ -112,5 +112,5 @@ if __name__ == "__main__":
 	profile_result = pstats.Stats(profile)
 	profile_result.sort_stats(pstats.SortKey.TIME)
 	# profile_result.print_stats()
-	profile_result.dump_stats('./isabel_pressure_volume.prof')
+	# profile_result.dump_stats('./isabel_pressure_volume.prof')
 	# snakeviz isabel_pressure_volume.prof # to visualize the profile
