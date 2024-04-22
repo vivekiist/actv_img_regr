@@ -30,11 +30,11 @@
 	"log_every" : 1,
 	"check_every" : 50,
 	"no_active_learning" : true,
-    "data_gen_script" : "./gen_img4.py",
-    "raw_inp_file" : "../data/Isabel_pressure_raw/Pf25.binLE.raw_corrected_2_subsampled.vti",
-	"varname" : "ImageScalars",
-	"num_new_samples" : 100,
-	"query_strategy" : "MSELoss",
-	"sampling_budget" : 10000
+    "data_gen_script" : "",
+    "raw_inp_file" : "",
+	"varname" : "",
+	"num_new_samples" : 0,
+	"query_strategy" : "",
+	"sampling_budget" : 0
 }
 

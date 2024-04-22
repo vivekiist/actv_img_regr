@@ -65,7 +65,7 @@ def isabel_pressure_volume(phi_values, theta_values):
 		renderView1.Update()
 
 		all_params.append([phi_values[i],theta_values[i]])
-		outfile = '../data/Isabel_pressure_volume_images/train2/' \
+		outfile = '../data/Isabel_pressure_volume_images/test/' \
 					+ str("{:.4f}".format(phi_values[i])) + '_' + str("{:.4f}".format(theta_values[i])) + '.png'
 		# save image out
 		SaveScreenshot(outfile, 
@@ -78,7 +78,7 @@ def isabel_pressure_volume(phi_values, theta_values):
 
 ## write the csv file with phi and theta values
 	all_params  = np.asarray(all_params)
-	np.savetxt('../data/Isabel_pressure_volume_images/train2/isabel_pr_viewparams_train2.csv', \
+	np.savetxt('../data/Isabel_pressure_volume_images/test/isabel_pr_viewparams_test.csv', \
 				all_params, delimiter=',')
 
 	
@@ -89,7 +89,7 @@ def isabel_pressure_volume(phi_values, theta_values):
 
 if __name__ == "__main__":
 	## regular sampled phi,theta vals
-	num_samples = 1000
+	num_samples = 400
 	## Randomly generate value
 	phi_values = np.random.uniform(-90, 90, num_samples) #phi -90,90 elevation
 	theta_values = np.random.uniform(0,360, num_samples) #theta 0 - 360 azimuth

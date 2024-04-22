@@ -5,7 +5,7 @@ import json
 # import logging
 from utils.logger_utils import setup_logger
 
-def load_config():
+def load_config(timestamp):
 	def load_json(args, json_logger):
 		json_file_dict = args.json_file
 		json_logger.info("Using file %s to setup configuration" % json_file_dict)
@@ -102,7 +102,8 @@ def load_config():
 
 
 	LOG_DIR = '../logs'
-	json_log_file = 'json_logger.log'
+	LOG_DIR = os.path.join(LOG_DIR, timestamp)
+	json_log_file = 'config_logger.log'
 	json_logger, json_file_handler = setup_logger(LOG_DIR, json_log_file, mod_name = __name__)
 	json_logger.info('Starting the load_config...')
 

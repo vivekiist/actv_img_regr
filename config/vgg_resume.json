@@ -28,7 +28,7 @@
     "start_epoch" : 100,
     "epochs" : 600,
 	"log_every" : 1,
-	"check_every" : 50,
+	"check_every" : 100,
 	"no_active_learning" : false,
     "data_gen_script" : "./gen_img4.py",
     "raw_inp_file" : "../data/Isabel_pressure_raw/Pf25.binLE.raw_corrected_2_subsampled.vti",

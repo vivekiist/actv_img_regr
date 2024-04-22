@@ -36,7 +36,9 @@ from utils.config_setter import load_config
 # from model_training.trainer import train
 
 # CONFIG_DIR = "../config"
-LOG_DIR = "../logs"
+# LOG_DIR = "../logs"
+LOG_DIR = "logs"
+
 main_log_file = 'main_logger.log'
 run_log_file = 'run_logger.log'
 
@@ -140,17 +142,22 @@ def calculate_uncertainty(args, output, image, vgg=None):
 
 # if __name__ == "__main__":    
 # setup_logging()
+timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+args = load_config(timestamp)
+# LOG_DIR = os.path.join(LOG_DIR, timestamp)
+args.root_out_dir = os.path.join(args.root_out_dir, timestamp)
+os.makedirs(args.root_out_dir, exist_ok=True)
+LOG_DIR = os.path.join(args.root_out_dir, LOG_DIR)
 main_logger, main_file_handler = setup_logger(LOG_DIR, main_log_file, mod_name = __name__)
 main_logger.info('Starting the application...')
-args = load_config()
+
 
 # select device
 args.cuda = not args.no_cuda and torch.cuda.is_available()
 device = torch.device("cuda:0" if args.cuda else "cpu")
 
-timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-args.root_out_dir = os.path.join(args.root_out_dir, timestamp)
-os.makedirs(args.root_out_dir, exist_ok=True)
+
+
 
 # set random seed
 np.random.seed(args.seed)
@@ -299,7 +306,7 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 
 		# mse loss
 		if args.use_mse_loss:
-			mse_loss = mse_criterion(image, fake_image)
+			mse_loss = args.mse_loss_weight * mse_criterion(image, fake_image)
 			loss += mse_loss
 
 		# perceptual loss
@@ -329,15 +336,17 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 
 		# log training status
 		if i % args.log_every == 0:
-			print(f"Train Epoch: {epoch} [Batch {i}/{len(train_loader)} ({100. * i / len(train_loader):.2f}%)]\tLoss: {(loss.item()):.6f}")
+			print(f"Train Epoch: {epoch} [Batch {i+1}/{len(train_loader)} ({100. * (i+1) / len(train_loader):.2f}%)]\tLoss: {(loss.item()):.4f}")
+			run_logger.info('Train Epoch: %s [Batch %d/%d (%.2f%%)]\t\tLoss: %.4f', epoch, i+1, len(train_loader), 100. * (i+1) / len(train_loader), loss.item())
 			if args.use_gan_loss:
-				print(f"DLoss: {d_loss.item():.6f}, GLoss: {g_loss.item():.6f}")
+				print(f"DLoss: {d_loss.item():.6f}, GLoss: {g_loss.item():.4f}")
+				run_logger.info("DLoss: %.6f, GLoss: %.4f", d_loss.item(), g_loss.item())
 				d_losses.append(d_loss.item())
 				g_losses.append(g_loss.item())
 			train_losses.append(loss.item())
 			
-	print(f"====> Epoch: {epoch} Average loss: {(sum(train_losses[-len(train_loader):])/len(train_loader)):.4f}")
-	run_logger.info('Epoch: %s', epoch)
+	print(f"====> Epoch: {epoch} Average train loss: \t\t\t{(sum(train_losses[-len(train_loader):])/len(train_loader)):.4f}\n")
+	run_logger.info('====> Epoch: %d Average train loss: \t\t\t\t\t%.4f\n', epoch, sum(train_losses[-len(train_loader):])/len(train_loader))
     ##########################################
     ## Active learning section
     ##########################################
@@ -347,8 +356,8 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 		gen_uncertain_indices, gen_vparams = select_uncertain_samples(args, g_model, train_loader)
 		run_logger.info('Selected uncertain samples: %s', gen_uncertain_indices)
 		run_logger.info('Selected uncertain viewparams: %s', vparams2azel(gen_vparams))
-		run_logger.info('Selected len of uncertain samples: %s', len(gen_uncertain_indices))
-		run_logger.info('Selected len of uncertain viewparams: %s', len(gen_vparams))
+		# run_logger.info('Selected len of uncertain samples: %s', len(gen_uncertain_indices))
+		# run_logger.info('Selected len of uncertain viewparams: %s', len(gen_vparams))
 
 		params = vparams2azel(gen_vparams)
 		pvpythonpath = "../../ParaView-5.12.0-egl-MPI-Linux-Python3.10-x86_64/bin/pvbatch"
@@ -376,7 +385,7 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 		train_loader = DataLoader(train_dataset, batch_size=args.batch_size,
 								shuffle=True, **kwargs)
 
-		run_logger.info('Train dataset length: %s', len(train_dataset))
+		run_logger.info('Length of Train Dataset: %s', len(train_dataset))
 		print(f"Length of Train Dataset: {len(train_dataset)}")
 
 		### generate scatterplot of new modified param space
@@ -386,7 +395,7 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 			plt.scatter(indata_train[:,0], indata_train[:,1],c='r',s=1)
 			splot_dir = os.path.join(args.root_out_dir, 'scatter_plots')
 			os.makedirs(splot_dir, exist_ok=True)
-			splot_fname = os.path.join(splot_dir, 'plot_epoch_' + str(epoch) + '_batch_' + str(i) + ".png")
+			splot_fname = os.path.join(splot_dir, 'plot_epoch_' + str(epoch) + ".png")
 			plt.savefig(splot_fname)
 
 	# Testing loss on test data set for each epoch
@@ -413,12 +422,15 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 				save_image(((comparison.cpu() + 1.) * .5),
 							fname, nrow=n)
 			test_losses.append(test_loss)
-			print (f"Test set loss for epoch {epoch}, batch {i} is {test_loss}")
+			print (f"\tTest set loss for epoch {epoch}, Batch {i+1}/{len(test_loader)} is {test_loss:.4f}")
+			run_logger.info("\tTest set loss for epoch %d, Batch %d/%d is %.4f", epoch, i+1, len(test_loader), test_loss)
 	avg = sum(test_losses[-len(test_loader):])/len(test_loader)
-	print(f"====> Epoch: {epoch} Average for Test set loss: {avg:.4f}\n\n")
+	print(f"\t====> Epoch: {epoch} Average Test set loss: \t\t{avg:.4f}")
+	run_logger.info("\t====> Epoch: %d Average Test set loss: \t\t\t\t%.4f", epoch, avg)
 	# saving...
 	if ((epoch+1) % args.check_every) == 0:
 		print("=> saving checkpoint at epoch {}".format(epoch+1))
+		run_logger.info("=> saving checkpoint at epoch %d", epoch + 1)
 		model_dir = os.path.join(args.root_out_dir, "model")
 		os.makedirs(model_dir, exist_ok=True)
 		chkname = os.path.join(model_dir, 'chk_' + str(epoch) + ".pth.tar")
@@ -446,7 +458,7 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 		main_logger.info('Model & Checkpoint saved at epoch %s', epoch)
 
 		
-		runlog_file_handler.close()
+runlog_file_handler.close()
 
-	main_logger.info('Exiting the application...')
-	main_file_handler.close()
+main_logger.info('Exiting the application...')
+main_file_handler.close()
