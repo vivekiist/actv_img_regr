@@ -285,10 +285,10 @@ if args.use_gan_loss:
 
 # load checkpoint
 if args.resume:
-	checkpointFile = os.path.join(args.root_out_dir, args.chkpt)
-	if os.path.isfile(checkpointFile):
-		main_logger.info('Loading checkpoint:  %s', checkpointFile)
-		checkpoint = torch.load(checkpointFile)
+	# checkpointFile = os.path.join(args.root_out_dir, args.chkpt)
+	if os.path.isfile(args.chkpt):
+		main_logger.info('Loading checkpoint:  %s', args.chkpt)
+		checkpoint = torch.load(args.chkpt)
 		# # To load checkpoint from a model trained on multiple GPUs
 		# for key in checkpoint.keys():
 		# 	# Check if the key corresponds to a model state dictionary
@@ -307,7 +307,7 @@ if args.resume:
 			g_losses = checkpoint["g_losses"]
 		train_losses = checkpoint["train_losses"]
 		test_losses = checkpoint["test_losses"]
-		main_logger.info('Loaded epoch %s from checkpoint %s.', checkpoint["epoch"], checkpointFile)
+		main_logger.info('Loaded epoch %s from checkpoint %s.', checkpoint["epoch"], args.chkpt)
 
 # Active learning loop
 # setup logger for the run
