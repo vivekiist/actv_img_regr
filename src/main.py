@@ -73,11 +73,11 @@ def vparams2azel(vparams):
 		theta_value = np.rad2deg(angle_rad)
 		phi_value = vp[2] * 90.0
 		azel.append([phi_value, theta_value])
-
 	return azel
 
 def select_uncertain_samples(args, model, train_loader):
 	model.eval()
+
 	all_vparams = []
 	uncertainties = []
 	uncertain_indices = []
@@ -86,58 +86,103 @@ def select_uncertain_samples(args, model, train_loader):
 	args.cuda = not args.no_cuda and torch.cuda.is_available()
 	device = torch.device("cuda:0" if args.cuda else "cpu")
 
-	with torch.no_grad():
-		for i, sample in enumerate(train_loader):
-			image = sample["image"].to(device)
-			vparams = sample["vparams"].to(device)
-			all_vparams.extend(vparams.tolist())
-			# Get model predictions
-			output = model(vparams)
-			uncertainty = calculate_uncertainty(args, output, image, vgg = None)
-			uncertainties.extend(uncertainty.tolist())
+	if args.query_strategy == "Random":
+		phi_values = np.random.uniform(-90, 90, args.num_new_samples) #phi -90,90 elevation
+		theta_values = np.random.uniform(0,360, args.num_new_samples) #theta 0 - 360 azimuth
+		# Create pairs of phi and theta
+		vparams_selected = np.dstack([phi_values, theta_values])[0]
 
-	# Get indices of samples with highest uncertainty
-	uncertain_indices = np.argsort(uncertainties)
-	ui_selected = uncertain_indices[-args.num_new_samples:]
-	vparams_selected = [all_vparams[i] for i in ui_selected]
+		return vparams_selected.tolist()
+	else:
+		with torch.no_grad():
+			for i, sample in enumerate(train_loader):
+				image = sample["image"].to(device)
+				vparams = sample["vparams"].to(device)
+				all_vparams.extend(vparams.tolist())
 
-	return ui_selected, vparams_selected
+				# Get model predictions
+				output = model(vparams)
 
-def calculate_uncertainty(args, output, image, vgg=None):
-	# select device
-	args.cuda = not args.no_cuda and torch.cuda.is_available()
-	device = torch.device("cuda:0" if args.cuda else "cpu")
-	losstype = args.query_strategy
-	if losstype == "MSELoss":
-		uncertainty = nn.MSELoss(reduction='none')(image, output)
-		uncertainty1 = uncertainty.sum(dim=(1, 2, 3)) # sum over height,width and channels
-	elif losstype == "VGG":
-		norm_mean = torch.tensor([.485, .456, .406]).view(-1, 1, 1).to(device)
-		norm_std = torch.tensor([.229, .224, .225]).view(-1, 1, 1).to(device)
-		if vgg is None:
-			vgg = VGG19('relu1_2').eval()
-			if args.data_parallel and torch.cuda.device_count() > 1:
-				vgg = nn.DataParallel(vgg)
-			vgg.to(device)
-		# normalize
-		image = ((image + 1.) * .5 - norm_mean) / norm_std
-		output = ((output + 1.) * .5 - norm_mean) / norm_std
-		features = vgg(image)
-		output_features = vgg(output)
-		uncertainty = nn.MSELoss(reduction='none')(features, output_features)        
-		uncertainty1 = uncertainty.sum(dim=(1, 2, 3))
-	elif losstype =="complexity":
-		# https://www.hdm-stuttgart.de/~maucher/Python/MMCodecs/html/basicFunctions.html#calculate-entropy-of-text
-		# # https://unimatrixz.com/blog/latent-space-image-quality-with-entropy/#python-libraries-for-image-entropy-calculation
-		# image = cv2.imread(image_path)
-		# gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-		# _bins = 128
-		# hist, _ = np.histogram(gray_image.ravel(), bins=_bins, range=(0, _bins))
-		# prob_dist = hist / hist.sum()
-		# image_entropy = entropy(prob_dist, base=2)
-		# print(f"Image Entropy {image_entropy}")
-		pass
-	return uncertainty1
+				if args.query_strategy == "MSELoss":
+					uncertainty = nn.MSELoss(reduction='none')(image, output)
+					uncertainty1 = uncertainty.sum(dim=(1, 2, 3)) # sum over height,width and channels
+				elif args.query_strategy == "VGG":
+					norm_mean = torch.tensor([.485, .456, .406]).view(-1, 1, 1).to(device)
+					norm_std = torch.tensor([.229, .224, .225]).view(-1, 1, 1).to(device)
+					if vgg is None:
+						vgg = VGG19('relu1_2').eval()
+						if args.data_parallel and torch.cuda.device_count() > 1:
+							vgg = nn.DataParallel(vgg)
+						vgg.to(device)
+					# normalize
+					image = ((image + 1.) * .5 - norm_mean) / norm_std
+					output = ((output + 1.) * .5 - norm_mean) / norm_std
+					features = vgg(image)
+					output_features = vgg(output)
+					uncertainty = nn.MSELoss(reduction='none')(features, output_features)        
+					uncertainty1 = uncertainty.sum(dim=(1, 2, 3))
+				elif args.query_strategy =="rand_MSELoss":
+					uncertainty = nn.MSELoss(reduction='none')(image, output)
+					uncertainty1 = uncertainty.sum(dim=(1, 2, 3))
+				elif args.query_strategy =="complexity":
+					# https://www.hdm-stuttgart.de/~maucher/Python/MMCodecs/html/basicFunctions.html#calculate-entropy-of-text
+					# # https://unimatrixz.com/blog/latent-space-image-quality-with-entropy/#python-libraries-for-image-entropy-calculation
+					# image = cv2.imread(image_path)
+					# gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+					# _bins = 128
+					# hist, _ = np.histogram(gray_image.ravel(), bins=_bins, range=(0, _bins))
+					# prob_dist = hist / hist.sum()
+					# image_entropy = entropy(prob_dist, base=2)
+					# print(f"Image Entropy {image_entropy}")
+					pass
+				uncertainties.extend(uncertainty1.tolist())
+
+		# Get indices of samples with highest uncertainty
+		uncertain_indices = np.argsort(uncertainties)
+		ui_selected = uncertain_indices[-args.num_new_samples:]
+		vparams_selected = [all_vparams[i] for i in ui_selected]
+		vparams_selected = vparams2azel(vparams_selected)
+
+		return vparams_selected
+
+# def calculate_uncertainty(args, output, image, vgg=None):
+# 	# select device
+# 	args.cuda = not args.no_cuda and torch.cuda.is_available()
+# 	device = torch.device("cuda:0" if args.cuda else "cpu")
+# 	losstype = args.query_strategy
+# 	if losstype == "MSELoss":
+# 		uncertainty = nn.MSELoss(reduction='none')(image, output)
+# 		uncertainty1 = uncertainty.sum(dim=(1, 2, 3)) # sum over height,width and channels
+# 	elif losstype == "VGG":
+# 		norm_mean = torch.tensor([.485, .456, .406]).view(-1, 1, 1).to(device)
+# 		norm_std = torch.tensor([.229, .224, .225]).view(-1, 1, 1).to(device)
+# 		if vgg is None:
+# 			vgg = VGG19('relu1_2').eval()
+# 			if args.data_parallel and torch.cuda.device_count() > 1:
+# 				vgg = nn.DataParallel(vgg)
+# 			vgg.to(device)
+# 		# normalize
+# 		image = ((image + 1.) * .5 - norm_mean) / norm_std
+# 		output = ((output + 1.) * .5 - norm_mean) / norm_std
+# 		features = vgg(image)
+# 		output_features = vgg(output)
+# 		uncertainty = nn.MSELoss(reduction='none')(features, output_features)        
+# 		uncertainty1 = uncertainty.sum(dim=(1, 2, 3))
+# 	elif losstype =="rand_MSELoss":
+# 		uncertainty = nn.MSELoss(reduction='none')(image, output)
+# 		uncertainty1 = uncertainty.sum(dim=(1, 2, 3))
+# 	elif losstype =="complexity":
+# 		# https://www.hdm-stuttgart.de/~maucher/Python/MMCodecs/html/basicFunctions.html#calculate-entropy-of-text
+# 		# # https://unimatrixz.com/blog/latent-space-image-quality-with-entropy/#python-libraries-for-image-entropy-calculation
+# 		# image = cv2.imread(image_path)
+# 		# gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+# 		# _bins = 128
+# 		# hist, _ = np.histogram(gray_image.ravel(), bins=_bins, range=(0, _bins))
+# 		# prob_dist = hist / hist.sum()
+# 		# image_entropy = entropy(prob_dist, base=2)
+# 		# print(f"Image Entropy {image_entropy}")
+# 		pass
+# 	return uncertainty1
 
 
 # if __name__ == "__main__":    
@@ -353,18 +398,18 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 	if (not args.no_active_learning) and (len(train_dataset) < args.sampling_budget):
 		# select uncertain samples
 		print("Selecting uncertain samples")	
-		gen_uncertain_indices, gen_vparams = select_uncertain_samples(args, g_model, train_loader)
-		run_logger.info('Selected uncertain samples: %s', gen_uncertain_indices)
-		run_logger.info('Selected uncertain viewparams: %s', vparams2azel(gen_vparams))
+		gen_vparams = select_uncertain_samples(args, g_model, train_loader)
+		# run_logger.info('Selected uncertain samples: %s', gen_uncertain_indices)
+		run_logger.info('Selected uncertain viewparams: %s', gen_vparams)
 		# run_logger.info('Selected len of uncertain samples: %s', len(gen_uncertain_indices))
 		# run_logger.info('Selected len of uncertain viewparams: %s', len(gen_vparams))
 
-		params = vparams2azel(gen_vparams)
+		
 		pvpythonpath = "../../ParaView-5.12.0-egl-MPI-Linux-Python3.10-x86_64/bin/pvbatch"
 
 		phi_new_batch = []
 		theta_new_batch = []  
-		for vp in params:
+		for vp in gen_vparams:
 			[phi_value, theta_value] = vp
 			phi_value = phi_value+np.random.uniform(-5, 5)
 			theta_value = theta_value+np.random.uniform(-5, 5)
