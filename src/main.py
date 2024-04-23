@@ -91,8 +91,7 @@ def select_uncertain_samples(args, model, train_loader):
 		theta_values = np.random.uniform(0,360, args.num_new_samples) #theta 0 - 360 azimuth
 		# Create pairs of phi and theta
 		vparams_selected = np.dstack([phi_values, theta_values])[0]
-
-		return vparams_selected.tolist()
+		vparams_selected = vparams_selected.tolist()
 	else:
 		with torch.no_grad():
 			for i, sample in enumerate(train_loader):
@@ -101,11 +100,12 @@ def select_uncertain_samples(args, model, train_loader):
 				all_vparams.extend(vparams.tolist())
 
 				# Get model predictions
-				output = model(vparams)
+				output = g_model(vparams)
 
 				if args.query_strategy == "MSELoss":
 					uncertainty = nn.MSELoss(reduction='none')(image, output)
 					uncertainty1 = uncertainty.sum(dim=(1, 2, 3)) # sum over height,width and channels
+					num_samples = args.num_new_samples
 				elif args.query_strategy == "VGG":
 					norm_mean = torch.tensor([.485, .456, .406]).view(-1, 1, 1).to(device)
 					norm_std = torch.tensor([.229, .224, .225]).view(-1, 1, 1).to(device)
@@ -121,27 +121,58 @@ def select_uncertain_samples(args, model, train_loader):
 					output_features = vgg(output)
 					uncertainty = nn.MSELoss(reduction='none')(features, output_features)        
 					uncertainty1 = uncertainty.sum(dim=(1, 2, 3))
+					num_samples = args.num_new_samples
 				elif args.query_strategy =="rand_MSELoss":
 					uncertainty = nn.MSELoss(reduction='none')(image, output)
 					uncertainty1 = uncertainty.sum(dim=(1, 2, 3))
+					num_samples = round(args.num_new_samples/2)
+				elif args.query_strategy =="rand_VGG":
+					norm_mean = torch.tensor([.485, .456, .406]).view(-1, 1, 1).to(device)
+					norm_std = torch.tensor([.229, .224, .225]).view(-1, 1, 1).to(device)
+					if vgg is None:
+						vgg = VGG19('relu1_2').eval()
+						if args.data_parallel and torch.cuda.device_count() > 1:
+							vgg = nn.DataParallel(vgg)
+						vgg.to(device)
+					# normalize
+					image = ((image + 1.) * .5 - norm_mean) / norm_std
+					output = ((output + 1.) * .5 - norm_mean) / norm_std
+					features = vgg(image)
+					output_features = vgg(output)
+					uncertainty = nn.MSELoss(reduction='none')(features, output_features)        
+					uncertainty1 = uncertainty.sum(dim=(1, 2, 3))
+					num_samples = round(args.num_new_samples/2)
 				elif args.query_strategy =="complexity":
-					# https://www.hdm-stuttgart.de/~maucher/Python/MMCodecs/html/basicFunctions.html#calculate-entropy-of-text
-					# # https://unimatrixz.com/blog/latent-space-image-quality-with-entropy/#python-libraries-for-image-entropy-calculation
-					# image = cv2.imread(image_path)
-					# gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-					# _bins = 128
-					# hist, _ = np.histogram(gray_image.ravel(), bins=_bins, range=(0, _bins))
-					# prob_dist = hist / hist.sum()
-					# image_entropy = entropy(prob_dist, base=2)
-					# print(f"Image Entropy {image_entropy}")
-					pass
+					grayscale_images = transforms.functional.rgb_to_grayscale(image)
+					np_array = grayscale_images.cpu().numpy()
+					entropies = []
+					for i in range(image.shape[0]):
+						entropy = skimage.measure.shannon_entropy(np_array[i, 0]) 
+						entropies.append(entropy)
+					uncertainty1 = np.array(entropies) 
+					num_samples = args.num_new_samples
+				elif args.query_strategy =="rand_complexity":
+					grayscale_images = transforms.functional.rgb_to_grayscale(image)
+					np_array = grayscale_images.cpu().numpy()
+					entropies = []
+					for i in range(image.shape[0]):
+						entropy = skimage.measure.shannon_entropy(np_array[i, 0]) 
+						entropies.append(entropy)
+					uncertainty1 = np.array(entropies) 
+					num_samples = round(args.num_new_samples/2)
 				uncertainties.extend(uncertainty1.tolist())
-
 		# Get indices of samples with highest uncertainty
 		uncertain_indices = np.argsort(uncertainties)
-		ui_selected = uncertain_indices[-args.num_new_samples:]
+		ui_selected = uncertain_indices[-num_samples:]
 		vparams_selected = [all_vparams[i] for i in ui_selected]
 		vparams_selected = vparams2azel(vparams_selected)
+		if len(vparams_selected) < 	args.num_new_samples:
+			phi_values = np.random.uniform(-90, 90, args.num_new_samples-len(vparams_selected)) #phi -90,90 elevation
+			theta_values = np.random.uniform(0,360, args.num_new_samples-len(vparams_selected)) #theta 0 - 360 azimuth
+			# Create pairs of phi and theta
+			vparams_gen = np.dstack([phi_values, theta_values])[0]
+			# vparams_gen = vparams_gen.tolist()
+			vparams_selected.extend(vparams_gen.tolist())
 
 		return vparams_selected
 
