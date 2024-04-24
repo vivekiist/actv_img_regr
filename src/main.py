@@ -319,19 +319,11 @@ if args.resume:
 	if os.path.isfile(args.chkpt):
 		main_logger.info('Loading checkpoint:  %s', args.chkpt)
 		checkpoint = torch.load(args.chkpt)
-		# # To load checkpoint from a model trained on multiple GPUs
-		# for key in checkpoint.keys():
-		# 	# Check if the key corresponds to a model state dictionary
-		# 	if key.endswith('model_state_dict'):
-		# 		state_dict = checkpoint[key]
-		# 		state_dict = {k.partition('module.')[2] if k.startswith('module.') else k: v for k, v in state_dict.items()}
-		# 		# Update the checkpoint dictionary with the transformed state dictionary
-		# 		checkpoint[key] = state_dict
 		args.start_epoch = checkpoint["epoch"]
-		g_model.load_state_dict(checkpoint["g_model_state_dict"])
+		g_model.load_state_dict(checkpoint["g_model_state_dict"], strict=False)
 		g_optimizer.load_state_dict(checkpoint["g_optimizer_state_dict"])
 		if args.use_gan_loss:
-			d_model.load_state_dict(checkpoint["d_model_state_dict"])
+			d_model.load_state_dict(checkpoint["d_model_state_dict"], strict=False)
 			d_optimizer.load_state_dict(checkpoint["d_optimizer_state_dict"])
 			d_losses = checkpoint["d_losses"]
 			g_losses = checkpoint["g_losses"]
