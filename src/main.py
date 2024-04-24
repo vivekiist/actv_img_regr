@@ -12,6 +12,7 @@ import pandas as pd
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 import json
+import skimage.measure
 
 import torch
 import torch.nn as nn
@@ -109,11 +110,10 @@ def select_uncertain_samples(args, model, train_loader):
 				elif args.query_strategy == "VGG":
 					norm_mean = torch.tensor([.485, .456, .406]).view(-1, 1, 1).to(device)
 					norm_std = torch.tensor([.229, .224, .225]).view(-1, 1, 1).to(device)
-					if vgg is None:
-						vgg = VGG19('relu1_2').eval()
-						if args.data_parallel and torch.cuda.device_count() > 1:
-							vgg = nn.DataParallel(vgg)
-						vgg.to(device)
+					vgg = VGG19('relu1_2').eval()
+					if args.data_parallel and torch.cuda.device_count() > 1:
+						vgg = nn.DataParallel(vgg)
+					vgg.to(device)
 					# normalize
 					image = ((image + 1.) * .5 - norm_mean) / norm_std
 					output = ((output + 1.) * .5 - norm_mean) / norm_std
@@ -129,11 +129,10 @@ def select_uncertain_samples(args, model, train_loader):
 				elif args.query_strategy =="rand_VGG":
 					norm_mean = torch.tensor([.485, .456, .406]).view(-1, 1, 1).to(device)
 					norm_std = torch.tensor([.229, .224, .225]).view(-1, 1, 1).to(device)
-					if vgg is None:
-						vgg = VGG19('relu1_2').eval()
-						if args.data_parallel and torch.cuda.device_count() > 1:
-							vgg = nn.DataParallel(vgg)
-						vgg.to(device)
+					vgg = VGG19('relu1_2').eval()
+					if args.data_parallel and torch.cuda.device_count() > 1:
+						vgg = nn.DataParallel(vgg)
+					vgg.to(device)
 					# normalize
 					image = ((image + 1.) * .5 - norm_mean) / norm_std
 					output = ((output + 1.) * .5 - norm_mean) / norm_std
