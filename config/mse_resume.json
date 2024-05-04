@@ -1,7 +1,7 @@
 {
 	"_comment": "This json file provides parameter configurations.",
 	"no_cuda" : false,
-    "data_parallel" : false,
+    "data_parallel" : true,
 	"seed" : 1,
     "root_dir_train": "../data/Isabel_pressure_volume_images/train/",
 	"root_dir_test": "../data/Isabel_pressure_volume_images/test/",
@@ -27,7 +27,7 @@
     "batch_size" : 400,
     "start_epoch" : 100,
     "epochs" : 600,
-	"log_every" : 2,
+	"log_every" : 1,
 	"check_every" : 50,
 	"no_active_learning" : false,
     "data_gen_script" : "./gen_img4.py",

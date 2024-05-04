@@ -34,7 +34,7 @@
     "raw_inp_file" : "../data/Isabel_pressure_raw/Pf25.binLE.raw_corrected_2_subsampled.vti",
 	"varname" : "ImageScalars",
 	"num_new_samples" : 100,
-	"query_strategy" : "rand_complexity",
+	"query_strategy" : "complexity",
 	"sampling_budget" : 10000
 }
 

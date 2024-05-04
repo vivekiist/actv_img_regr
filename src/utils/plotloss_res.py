@@ -10,6 +10,10 @@ train_losses = checkpoint["train_losses"]
 test_losses = checkpoint["test_losses"]
 batch_train_losses = checkpoint["batch_train_losses"]
 batch_test_losses = checkpoint["batch_test_losses"]
+
+# avg_train_losses = [sum(train_losses[i:i+10]) / 10 for i in range(0, len(train_losses), 10)]
+
+
 # epoch_losses = []
 # current_epoch_losses = []
 # train_len = 900
@@ -25,12 +29,12 @@ batch_test_losses = checkpoint["batch_test_losses"]
 #         epoch_losses.append(epoch_avg_loss)
 #         current_epoch_losses = []
 
-epochs = list(range(1, epoch + 1))
+epochs = list(range(1, epoch + 2))
 
 # Plot the training and testing losses
 plt.figure(figsize=(10, 6))
 plt.plot(epochs, train_losses, label="Train Loss")
-plt.plot(epochs, np.array(test_losses), label="Test Loss")
+plt.plot(epochs, test_losses, label="Test Loss")
 plt.xlabel("Epochs")
 plt.ylabel("Loss")
 # plt.title("Training and Testing Losses")
