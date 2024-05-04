@@ -13,6 +13,8 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 import json
 import skimage.measure
+import piq
+
 
 import torch
 import torch.nn as nn
@@ -159,6 +161,15 @@ def select_uncertain_samples(args, model, train_loader):
 						entropies.append(entropy)
 					uncertainty1 = np.array(entropies) 
 					num_samples = round(args.num_new_samples/2)
+				# elif args.query_strategy =="diversity":
+				# 	grayscale_images = transforms.functional.rgb_to_grayscale(image)
+				# 	np_array = grayscale_images.cpu().numpy()
+				# 	entropies = []
+				# 	for i in range(image.shape[0]):
+				# 		entropy = skimage.measure.shannon_entropy(np_array[i, 0]) 
+				# 		entropies.append(entropy)
+				# 	uncertainty1 = np.array(entropies) 
+				# 	num_samples = round(args.num_new_samples/2)
 				uncertainties.extend(uncertainty1.tolist())
 		# Get indices of samples with highest uncertainty
 		uncertain_indices = np.argsort(uncertainties)
@@ -299,7 +310,7 @@ if args.use_vgg_loss:
 
 # mse_criterion = nn.MSELoss()
 mse_criterion = nn.MSELoss(reduction='mean')
-train_losses, test_losses = [], []
+batch_train_losses, train_losses, batch_test_losses, batch_ssim, batch_psnr, test_losses, test_ssim, test_psnr = [], [], [], [], [], [], [], []
 d_losses, g_losses = [], []
 main_logger.info('MSE loss initialised.')
 
@@ -327,8 +338,14 @@ if args.resume:
 			d_optimizer.load_state_dict(checkpoint["d_optimizer_state_dict"])
 			d_losses = checkpoint["d_losses"]
 			g_losses = checkpoint["g_losses"]
+		batch_train_losses = checkpoint["batch_train_losses"]
+		batch_test_losses = checkpoint["batch_test_losses"]
+		batch_ssim = checkpoint["batch_ssim"]
+		batch_psnr = checkpoint["batch_psnr"]
 		train_losses = checkpoint["train_losses"]
 		test_losses = checkpoint["test_losses"]
+		test_ssim = checkpoint["test_ssim"]
+		test_psnr = checkpoint["test_psnr"]
 		main_logger.info('Loaded epoch %s from checkpoint %s.', checkpoint["epoch"], args.chkpt)
 
 # Active learning loop
@@ -342,8 +359,6 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 		d_model.train()
 	
 	train_loss = 0.0
-	epoch_losses = [] #why?
-
 
 	for i, sample in enumerate(train_loader):
 		loss = 0.0
@@ -369,12 +384,12 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 			g_optimizer.zero_grad()
 			fake_decision = d_model(vparams, fake_image)
 			g_loss = args.gan_loss_weight * torch.mean(fake_decision)  # using hinge loss
-			loss += g_loss
+			loss += g_loss * len(image)/len(train_loader.dataset)
 
 		# mse loss
 		if args.use_mse_loss:
 			mse_loss = args.mse_loss_weight * mse_criterion(image, fake_image)
-			loss += mse_loss
+			loss += mse_loss * len(image)/len(train_loader.dataset)
 
 		# perceptual loss
 		if args.use_vgg_loss:
@@ -384,11 +399,11 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 			features = vgg(image1)
 			fake_features = vgg(fake_image1)
 			perc_loss = args.vgg_loss_weight * mse_criterion(features, fake_features)
-			loss += perc_loss
+			loss += perc_loss * len(image)/len(train_loader.dataset)
 
 		loss.backward()
 		g_optimizer.step()
-		train_loss += loss.item() * args.batch_size 
+		# train_loss += loss.item() * len(image)
 
 		if (epoch%10 == 0 or epoch == args.epochs-1) and i == 0: #save comparison every 10th epoch & last epoch & first batch
 			n = min(args.batch_size, 8)
@@ -402,18 +417,19 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 						fname, nrow=n)
 
 		# log training status
-		if i % args.log_every == 0:
-			print(f"Train Epoch: {epoch} [Batch {i+1}/{len(train_loader)} ({100. * (i+1) / len(train_loader):.2f}%)]\tLoss: {(loss.item()):.4f}")
-			run_logger.info('Train Epoch: %s [Batch %d/%d (%.2f%%)]\t\tLoss: %.4f', epoch, i+1, len(train_loader), 100. * (i+1) / len(train_loader), loss.item())
-			if args.use_gan_loss:
-				print(f"DLoss: {d_loss.item():.6f}, GLoss: {g_loss.item():.4f}")
-				run_logger.info("DLoss: %.6f, GLoss: %.4f", d_loss.item(), g_loss.item())
-				d_losses.append(d_loss.item())
-				g_losses.append(g_loss.item())
-			train_losses.append(loss.item())
-			
-	print(f"====> Epoch: {epoch} Average train loss: \t\t\t{(sum(train_losses[-len(train_loader):])/len(train_loader)):.4f}\n")
-	run_logger.info('====> Epoch: %d Average train loss: \t\t\t\t\t%.4f\n', epoch, sum(train_losses[-len(train_loader):])/len(train_loader))
+		# print(f"Train Epoch: {epoch} [Batch {i+1}/{len(train_loader)} ({100. * (i+1) / len(train_loader):.2f}%)]\tLoss: {(loss.item()):.4f}")
+		run_logger.info('Train Epoch: %s [Batch %d/%d (%.2f%%)]\t\tLoss: %.4f', epoch, i+1, len(train_loader), 100. * (i+1) / len(train_loader), loss.item())
+		if args.use_gan_loss:
+			# print(f"DLoss: {d_loss.item():.6f}, GLoss: {g_loss.item():.4f}")
+			run_logger.info("DLoss: %.6f, GLoss: %.4f", d_loss.item(), g_loss.item())
+			d_losses.append(d_loss.item())
+			g_losses.append(g_loss.item())
+		batch_train_losses.append(loss.item())
+	
+	epoch_loss = sum(batch_train_losses[-len(train_loader):])
+	print(f"\n====> Epoch: {epoch} Train loss: \t\t\t{epoch_loss:.4f}")
+	run_logger.info('====> Epoch: %d Train loss: \t\t\t\t\t%.4f\n', epoch, epoch_loss)
+	train_losses.append(epoch_loss)
     ##########################################
     ## Active learning section
     ##########################################
@@ -435,6 +451,16 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 			[phi_value, theta_value] = vp
 			phi_value = phi_value+np.random.uniform(-5, 5)
 			theta_value = theta_value+np.random.uniform(-5, 5)
+			# # Ensure phi is within -90 to 90
+			# phi_value = np.clip(phi_value, -90, 90)
+			# # Ensure theta is within 0 to 360
+			# theta_value = np.clip(theta_value, 0, 360)
+
+			# Wrap phi values within -90 to 90 degrees
+			phi_value = ((phi_value + 180) % 360) - 180
+			# Wrap theta values within 0 to 360 degrees
+			theta_value = theta_value % 360
+
 			phi_new_batch.append(phi_value)
 			theta_new_batch.append(theta_value)
 			run_logger.info('Generating image for phi: %s, theta: %s', phi_value, theta_value)
@@ -456,7 +482,8 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 		print(f"Length of Train Dataset: {len(train_dataset)}")
 
 		### generate scatterplot of new modified param space
-		if (epoch % 10 == 0  or epoch == args.epochs-1):
+		# if ((epoch+1) % 10 == 0 or len(train_dataset) >= 10000):
+		if ((epoch+1) % 10 == 0):
 			indata_train = np.loadtxt(os.path.join(train_dataset.root, train_dataset.param_file),delimiter=',')
 			plt.figure(figsize=(10,10))
 			plt.scatter(indata_train[:,0], indata_train[:,1],c='r',s=1)
@@ -469,31 +496,59 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 	g_model.eval()
 	if args.use_gan_loss:
 		d_model.eval()
-	test_loss = 0.
+	
+	ssim_loss = 0.
+	psnr_loss = 0.
+
 	with torch.no_grad():
 		for i, sample in enumerate(test_loader):
 			image = sample["image"].to(device)
 			vparams = sample["vparams"].to(device)
 			fake_image = g_model(vparams)
+			test_loss = 0.
+			test_loss += mse_criterion(image, fake_image) * len(image)/len(test_loader.dataset)
+
+			image2 = (image+ 1.) * .5
+			fake_image2 = (fake_image+ 1.) * .5
 			# test_loss += mse_criterion(image, fake_image).item() * len(image)
-			test_loss += mse_criterion(image, fake_image).item()
+			ssim_loss += piq.ssim(image2, fake_image2, data_range=1.) * len(image)/len(test_loader.dataset)
+			psnr_loss += piq.psnr(image2, fake_image2, data_range=1., reduction='mean') * len(image)/len(test_loader.dataset)
+
+			# perceptual loss
+			if args.use_vgg_loss:
+				# normalize
+				image1 = ((image + 1.) * .5 - norm_mean) / norm_std
+				fake_image1 = ((fake_image + 1.) * .5 - norm_mean) / norm_std
+				features = vgg(image1)
+				fake_features = vgg(fake_image1)
+				perc_loss = args.vgg_loss_weight * mse_criterion(features, fake_features)
+				test_loss += perc_loss * len(image)/len(test_loader.dataset)
 
 			if (epoch%10 == 0 or epoch == args.epochs-1) and i == 0: #save comparison every 10th epoch & last epoch & first batch
-				n = min(args.batch_size, 8)
+				n = min(len(image), 8)
 				comparison = torch.cat(
-					[image[:n], fake_image.view(args.batch_size, 3, 128, 128)[:n]])
+					[image[:n], fake_image.view(len(image), 3, 128, 128)[:n]])
 				
 				comparison_dir = os.path.join(args.root_out_dir, "images")
 				os.makedirs(comparison_dir, exist_ok=True)
 				fname = os.path.join(comparison_dir, 'test_' + str(epoch) + '_batch_' + str(i) + ".png")
 				save_image(((comparison.cpu() + 1.) * .5),
 							fname, nrow=n)
-			test_losses.append(test_loss)
-			print (f"\tTest set loss for epoch {epoch}, Batch {i+1}/{len(test_loader)} is {test_loss:.4f}")
-			run_logger.info("\tTest set loss for epoch %d, Batch %d/%d is %.4f", epoch, i+1, len(test_loader), test_loss)
-	avg = sum(test_losses[-len(test_loader):])/len(test_loader)
-	print(f"\t====> Epoch: {epoch} Average Test set loss: \t\t{avg:.4f}")
-	run_logger.info("\t====> Epoch: %d Average Test set loss: \t\t\t\t%.4f", epoch, avg)
+			batch_test_losses.append(test_loss.item())
+			batch_ssim.append(ssim_loss.item())
+			batch_psnr.append(psnr_loss.item())
+			# print (f"\tTest set loss for epoch {epoch}, Batch {i+1}/{len(test_loader)} is {test_loss.item():.4f}")
+			run_logger.info("\tTest set loss for epoch %d, Batch %d/%d is %.4f", epoch, i+1, len(test_loader), test_loss.item())
+	epoch_ssim = sum(batch_ssim[-len(test_loader):])
+	epoch_psnr = sum(batch_psnr[-len(test_loader):])
+	epoch_test_loss = sum(batch_test_losses[-len(test_loader):])
+	print(f"\t====> Epoch: {epoch} Test loss: \t\t{epoch_test_loss:.4f}")
+	run_logger.info("\t====> Epoch: %d Test loss: \t\t\t\t%.4f", epoch, epoch_test_loss)
+	run_logger.info("\t====> Epoch: %d SSIM: \t\t\t\t%.4f", epoch, epoch_ssim)
+	run_logger.info("\t====> Epoch: %d PSNR: \t\t\t\t%.4f", epoch, epoch_psnr)
+	test_losses.append(epoch_test_loss)
+	test_ssim.append(epoch_ssim)
+	test_psnr.append(epoch_psnr)
 	# saving...
 	if ((epoch+1) % args.check_every) == 0:
 		print("=> saving checkpoint at epoch {}".format(epoch+1))
@@ -510,22 +565,51 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 						"d_optimizer_state_dict": d_optimizer.state_dict(),
 						"d_losses": d_losses,
 						"g_losses": g_losses,
+						"batch_train_losses": batch_train_losses, 
+						"batch_test_losses": batch_test_losses,
+						"batch_ssim": batch_ssim,
+						"batch_psnr": batch_psnr,
 						"train_losses": train_losses,
 						"test_losses": test_losses},
+						"test_ssim": test_ssim,
+						"test_psnr": test_psnr,
 						chkname)
 		else:
 			torch.save({"epoch": epoch + 1,
 						"g_model_state_dict": g_model.state_dict(),
 						"g_optimizer_state_dict": g_optimizer.state_dict(),
+						"batch_train_losses": batch_train_losses,
+						"batch_test_losses": batch_test_losses,
+						"batch_ssim": batch_ssim,
+						"batch_psnr": batch_psnr,
 						"train_losses": train_losses,
 						"test_losses": test_losses},
+						"test_ssim": test_ssim,
+						"test_psnr": test_psnr,
 						chkname)
 
 		torch.save(g_model.state_dict(), mname)
 		main_logger.info('Model & Checkpoint saved at epoch %s', epoch)
 
-		
-runlog_file_handler.close()
+	if (epoch == args.epochs-1):
+		epochs = list(range(1, epoch + 2))
+		plt.figure(figsize=(10, 6))
+		plt.plot(epochs, train_losses, label="Train Loss")
+		plt.plot(epochs, test_losses, label="Test Loss")
+		plt.xlabel("Epochs")
+		plt.ylabel("Loss")
+		# plt.title("Training and Testing Losses")
+		plt.legend()
+		plt.grid(True)
 
+		loss_plots_dir = os.path.join(args.root_out_dir, "loss_plots")
+		os.makedirs(loss_plots_dir, exist_ok=True)
+		fname = os.path.join(loss_plots_dir, 'loss_plot_epoch_'+ str(epoch) + ".png")
+
+		# plt.show() 
+		plt.savefig(fname)
+		main_logger.info('Loss plot saved at epoch %s', epoch)
+
+runlog_file_handler.close()
 main_logger.info('Exiting the application...')
 main_file_handler.close()

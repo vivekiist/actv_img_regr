@@ -68,7 +68,7 @@ def isabel_pressure_volume():
 		renderView1.Update()
 
 		all_params.append([phi_val,theta_val])
-		outfile = '../data/Isabel_pressure_volume_images/train2/' \
+		outfile = '../data/Isabel_pressure_volume_images/test2/' \
 					+ str("{:.4f}".format(phi_val)) + '_' + str("{:.4f}".format(theta_val)) + '.png'
 		# save image out
 		SaveScreenshot(outfile, 
@@ -81,7 +81,7 @@ def isabel_pressure_volume():
 
 	## write the csv file out with phi and theta values
 	all_params  = np.asarray(all_params)
-	np.savetxt('../data/Isabel_pressure_volume_images/train2/isabel_pr_viewparams_train2.csv', \
+	np.savetxt('../data/Isabel_pressure_volume_images/test2/isabel_pr_viewparams_test.csv', \
 				all_params, delimiter=',')
 
 	

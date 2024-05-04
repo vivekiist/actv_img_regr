@@ -54,18 +54,18 @@ def isabel_pressure_volume(phi_values, theta_values):
 	renderView1.CameraParallelScale = 177.7659978736091
 
 
-
+	camera=GetActiveCamera()
 	for i in range(len(phi_values)):
 		if i%100 == 0:
 			print ('generating sample: ' + str(i))
-		camera=GetActiveCamera()
+
 		renderView1.ResetCamera()
 		camera.Elevation(phi_values[i]) 
 		camera.Azimuth(theta_values[i])
 		renderView1.Update()
 
 		all_params.append([phi_values[i],theta_values[i]])
-		outfile = '../data/Isabel_pressure_volume_images/test/' \
+		outfile = '../data/Isabel_pressure_volume_images/test2/' \
 					+ str("{:.4f}".format(phi_values[i])) + '_' + str("{:.4f}".format(theta_values[i])) + '.png'
 		# save image out
 		SaveScreenshot(outfile, 
@@ -78,7 +78,7 @@ def isabel_pressure_volume(phi_values, theta_values):
 
 ## write the csv file with phi and theta values
 	all_params  = np.asarray(all_params)
-	np.savetxt('../data/Isabel_pressure_volume_images/test/isabel_pr_viewparams_test.csv', \
+	np.savetxt('../data/Isabel_pressure_volume_images/test2/isabel_pr_viewparams_test.csv', \
 				all_params, delimiter=',')
 
 	
@@ -89,14 +89,14 @@ def isabel_pressure_volume(phi_values, theta_values):
 
 if __name__ == "__main__":
 	## regular sampled phi,theta vals
-	num_samples = 400
+	num_samples = 1000
 	## Randomly generate value
 	phi_values = np.random.uniform(-90, 90, num_samples) #phi -90,90 elevation
 	theta_values = np.random.uniform(0,360, num_samples) #theta 0 - 360 azimuth
-	with cProfile.Profile() as profile:
-		isabel_pressure_volume(phi_values, theta_values)
-	profile_result = pstats.Stats(profile)
-	profile_result.sort_stats(pstats.SortKey.TIME)
-	# profile_result.print_stats()
-	profile_result.dump_stats('isabel_pressure_volume.prof')
+	# with cProfile.Profile() as profile:
+	isabel_pressure_volume(phi_values, theta_values)
+	# profile_result = pstats.Stats(profile)
+	# profile_result.sort_stats(pstats.SortKey.TIME)
+	# # profile_result.print_stats()
+	# profile_result.dump_stats('isabel_pressure_volume.prof')
 	# snakeviz isabel_pressure_volume.prof # to visualize the profile

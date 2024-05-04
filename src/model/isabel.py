@@ -45,11 +45,11 @@ class IsabelDataset(Dataset):
 
 		params = self.data.iloc[index]
 		img_name = os.path.join(self.root, self.filenames[index])
-
 		vparams = np.zeros(3, dtype=np.float32)
-		vparams[0] = np.cos(np.deg2rad(params[1]))
-		vparams[1] = np.sin(np.deg2rad(params[1]))
-		vparams[2] = params[0] / 90.
+		# vparams[0] = np.cos(np.deg2rad(params.iloc[1]))
+		vparams[0] = np.cos(np.deg2rad(params['theta'])) 
+		vparams[1] = np.sin(np.deg2rad(params['theta']))
+		vparams[2] = params['phi'] / 90.
 
 		image = io.imread(img_name)[:, :, 0:3]
 		sample = {"image": image, "vparams": vparams}
@@ -124,14 +124,14 @@ class ToTensor(object):
 
 # # dataset verification
 # from torchvision import transforms, utils
-# dataset = IsabelDataset(
+# Idataset = IsabelDataset(
 #     root="../data/Isabel_pressure_volume_images/train/",
-# 	param_file = "test_add_data.csv",
+# 	param_file = "isabel_pr_viewparams_train.csv",
 #     train=True,
 #     test=False,
 #     transform=transforms.Compose([Resize(64), Normalize(), ToTensor()]))
 
-# loader = DataLoader(dataset, batch_size=5, shuffle=True, num_workers=4)
+# loader = DataLoader(Idataset, batch_size=5, shuffle=True, num_workers=4)
 
 # dataiter = iter(loader)
 # samples = next(dataiter)
@@ -144,14 +144,14 @@ class ToTensor(object):
 	
 # # Add new samples
 # new_data = pd.DataFrame({'phi': [2,4,6], 'theta': [10,100,1000]})
-# dataset.add_samples(new_data)
+# Idataset.add_samples(new_data)
 # np.savetxt('./isabel_pr_viewparams.csv', \
 #             np.column_stack(([2,4,6], [10,100,1000])), delimiter=',')
-# len(dataset.filenames)
-# dataset.filenames[514]
+# len(Idataset.filenames)
+# Idataset.filenames[514]
 
 # from torch.utils.data import Subset
 # subset_indices = range(0,500)
-# subset_dataset = Subset(dataset, subset_indices)
+# subset_dataset = Subset(Idataset, subset_indices)
 # for i, sample in enumerate(subset_dataset):
 #   print(i, sample["image"].shape, sample["vparams"].shape)    
