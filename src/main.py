@@ -615,6 +615,7 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 		plt.savefig(fname)
 		main_logger.info('Loss plot saved at epoch %s', epoch)
 		print (f"SSIM: {test_ssim[-1]}, PSNR: {test_psnr[-1]}")
+		print (f"Train Loss: {train_losses[-1]}, Train Loss: {test_losses[-1]}")
 
 runlog_file_handler.close()
 main_logger.info('Exiting the application...')
