@@ -435,7 +435,7 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
     ##########################################
 	if (not args.no_active_learning) and (len(train_dataset) < args.sampling_budget):
 		# select uncertain samples
-		print("Selecting uncertain samples")	
+		print("Selecting samples for generation")	
 		gen_vparams = select_uncertain_samples(args, g_model, train_loader)
 		# run_logger.info('Selected uncertain samples: %s', gen_uncertain_indices)
 		run_logger.info('Selected uncertain viewparams: %s', gen_vparams)
@@ -614,8 +614,32 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 		# plt.show() 
 		plt.savefig(fname)
 		main_logger.info('Loss plot saved at epoch %s', epoch)
+
+		plt.figure(figsize=(10, 6))
+		plt.plot(epochs, test_ssim, label="Test SSIM")
+		plt.xlabel("Epochs")
+		plt.ylabel("SSIM")
+		plt.legend()
+		plt.grid(True)
+
+		ssim_fname = os.path.join(loss_plots_dir, 'ssim_plot_epoch_'+ str(epoch) + ".png")
+		plt.savefig(ssim_fname)
+		main_logger.info('SSIM plot saved at epoch %s', epoch)
+
+		plt.figure(figsize=(10, 6))
+		plt.plot(epochs, test_psnr, label="Test PSNR")
+		plt.xlabel("Epochs")
+		plt.ylabel("PSNR")
+		plt.legend()
+		plt.grid(True)
+
+		psnr_fname = os.path.join(loss_plots_dir, 'psnr_plot_epoch_'+ str(epoch) + ".png")
+		plt.savefig(psnr_fname)
+		main_logger.info('PSNR plot saved at epoch %s', epoch)
+
+
 		print (f"SSIM: {test_ssim[-1]}, PSNR: {test_psnr[-1]}")
-		print (f"Train Loss: {train_losses[-1]}, Train Loss: {test_losses[-1]}")
+		print (f"Train Loss: {train_losses[-1]}, Test Loss: {test_losses[-1]}")
 
 runlog_file_handler.close()
 main_logger.info('Exiting the application...')

@@ -10,7 +10,8 @@ train_losses = checkpoint["train_losses"]
 test_losses = checkpoint["test_losses"]
 batch_train_losses = checkpoint["batch_train_losses"]
 batch_test_losses = checkpoint["batch_test_losses"]
-
+test_ssim = checkpoint["test_ssim"]
+test_psnr = checkpoint["test_psnr"]
 # avg_train_losses = [sum(train_losses[i:i+10]) / 10 for i in range(0, len(train_losses), 10)]
 
 
@@ -43,3 +44,22 @@ plt.grid(True)
 
 # plt.show() 
 plt.savefig("loss_plot.png")
+
+
+plt.figure(figsize=(10, 6))
+plt.plot(epochs, test_ssim, label="Test SSIM")
+plt.xlabel("Epochs")
+plt.ylabel("SSIM")
+plt.legend()
+plt.grid(True)
+
+plt.savefig("SSIM_plot.png")
+
+plt.figure(figsize=(10, 6))
+plt.plot(epochs, test_psnr, label="Test PSNR")
+plt.xlabel("Epochs")
+plt.ylabel("PSNR")
+plt.legend()
+plt.grid(True)
+
+plt.savefig("PSNR_plot.png")
