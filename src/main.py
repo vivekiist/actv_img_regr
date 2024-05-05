@@ -497,8 +497,7 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 	if args.use_gan_loss:
 		d_model.eval()
 	
-	ssim_loss = 0.
-	psnr_loss = 0.
+
 
 	with torch.no_grad():
 		for i, sample in enumerate(test_loader):
@@ -508,11 +507,15 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 			test_loss = 0.
 			test_loss += mse_criterion(image, fake_image) * len(image)/len(test_loader.dataset)
 
+			# ssim_loss = 0.
+			# psnr_loss = 0.
 			image2 = (image+ 1.) * .5
 			fake_image2 = (fake_image+ 1.) * .5
-			# test_loss += mse_criterion(image, fake_image).item() * len(image)
-			ssim_loss += piq.ssim(image2, fake_image2, data_range=1.) * len(image)/len(test_loader.dataset)
-			psnr_loss += piq.psnr(image2, fake_image2, data_range=1., reduction='mean') * len(image)/len(test_loader.dataset)
+			# ssim_loss = piq.ssim(image2, fake_image2, data_range=1.)
+			# psnr_loss = piq.psnr(image2, fake_image2, data_range=1., reduction='mean')
+
+			ssim_loss = piq.ssim(image2, fake_image2, data_range=1.) * len(image)/len(test_loader.dataset)
+			psnr_loss = piq.psnr(image2, fake_image2, data_range=1., reduction='mean') * len(image)/len(test_loader.dataset)
 
 			# perceptual loss
 			if args.use_vgg_loss:
@@ -539,6 +542,8 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 			batch_psnr.append(psnr_loss.item())
 			# print (f"\tTest set loss for epoch {epoch}, Batch {i+1}/{len(test_loader)} is {test_loss.item():.4f}")
 			run_logger.info("\tTest set loss for epoch %d, Batch %d/%d is %.4f", epoch, i+1, len(test_loader), test_loss.item())
+	# epoch_ssim = sum(batch_ssim[-len(test_loader):])/len(test_loader)
+	# epoch_psnr = sum(batch_psnr[-len(test_loader):])/len(test_loader)
 	epoch_ssim = sum(batch_ssim[-len(test_loader):])
 	epoch_psnr = sum(batch_psnr[-len(test_loader):])
 	epoch_test_loss = sum(batch_test_losses[-len(test_loader):])
@@ -550,7 +555,7 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 	test_ssim.append(epoch_ssim)
 	test_psnr.append(epoch_psnr)
 	# saving...
-	if ((epoch+1) % args.check_every) == 0:
+	if (((epoch+1) % args.check_every == 0) or (epoch == args.epochs-1)) :
 		print("=> saving checkpoint at epoch {}".format(epoch+1))
 		run_logger.info("=> saving checkpoint at epoch %d", epoch + 1)
 		model_dir = os.path.join(args.root_out_dir, "model")
@@ -570,9 +575,9 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 						"batch_ssim": batch_ssim,
 						"batch_psnr": batch_psnr,
 						"train_losses": train_losses,
-						"test_losses": test_losses},
+						"test_losses": test_losses,
 						"test_ssim": test_ssim,
-						"test_psnr": test_psnr,
+						"test_psnr": test_psnr},
 						chkname)
 		else:
 			torch.save({"epoch": epoch + 1,
@@ -583,9 +588,9 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 						"batch_ssim": batch_ssim,
 						"batch_psnr": batch_psnr,
 						"train_losses": train_losses,
-						"test_losses": test_losses},
+						"test_losses": test_losses,
 						"test_ssim": test_ssim,
-						"test_psnr": test_psnr,
+						"test_psnr": test_psnr},
 						chkname)
 
 		torch.save(g_model.state_dict(), mname)
@@ -609,6 +614,7 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 		# plt.show() 
 		plt.savefig(fname)
 		main_logger.info('Loss plot saved at epoch %s', epoch)
+		print (f"SSIM: {test_ssim[-1]}, PSNR: {test_psnr[-1]}")
 
 runlog_file_handler.close()
 main_logger.info('Exiting the application...')
