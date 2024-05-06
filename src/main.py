@@ -547,10 +547,10 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 	epoch_ssim = sum(batch_ssim[-len(test_loader):])
 	epoch_psnr = sum(batch_psnr[-len(test_loader):])
 	epoch_test_loss = sum(batch_test_losses[-len(test_loader):])
-	print(f"\t====> Epoch: {epoch} Test loss: \t\t{epoch_test_loss:.4f}")
-	run_logger.info("\t====> Epoch: %d Test loss: \t\t\t\t%.4f", epoch, epoch_test_loss)
-	run_logger.info("\t====> Epoch: %d SSIM: \t\t\t\t%.4f", epoch, epoch_ssim)
-	run_logger.info("\t====> Epoch: %d PSNR: \t\t\t\t%.4f", epoch, epoch_psnr)
+	print(f"\tEpoch: {epoch} Test loss: \t\t{epoch_test_loss:.4f}")
+	run_logger.info("\tEpoch: %d Test loss: \t\t\t\t%.4f", epoch, epoch_test_loss)
+	run_logger.info("\tEpoch: %d SSIM: \t\t\t\t%.4f", epoch, epoch_ssim)
+	run_logger.info("\tEpoch: %d PSNR: \t\t\t\t%.4f", epoch, epoch_psnr)
 	test_losses.append(epoch_test_loss)
 	test_ssim.append(epoch_ssim)
 	test_psnr.append(epoch_psnr)
@@ -598,44 +598,114 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 
 	if (epoch == args.epochs-1):
 		epochs = list(range(1, epoch + 2))
-		plt.figure(figsize=(10, 6))
-		plt.plot(epochs, train_losses, label="Train Loss")
-		plt.plot(epochs, test_losses, label="Test Loss")
-		plt.xlabel("Epochs")
-		plt.ylabel("Loss")
-		# plt.title("Training and Testing Losses")
-		plt.legend()
-		plt.grid(True)
+
+		f_loss = plt.figure(figsize=(10, 6))
+		ax_loss = f_loss.add_subplot(111)
+		ax_loss.plot(epochs, train_losses, label="Train Loss")
+		ax_loss.plot(epochs, test_losses, label="Test Loss")
+		ax_loss.set_xlabel("Epochs")
+		ax_loss.set_ylabel("Loss")
+		# ax_loss.title("Training and Testing Losses")
+		ax_loss.legend()
+		ax_loss.grid(True)
 
 		loss_plots_dir = os.path.join(args.root_out_dir, "loss_plots")
 		os.makedirs(loss_plots_dir, exist_ok=True)
 		fname = os.path.join(loss_plots_dir, 'loss_plot_epoch_'+ str(epoch) + ".png")
 
 		# plt.show() 
-		plt.savefig(fname)
+		f_loss.savefig(fname)
 		main_logger.info('Loss plot saved at epoch %s', epoch)
 
-		plt.figure(figsize=(10, 6))
-		plt.plot(epochs, test_ssim, label="Test SSIM")
-		plt.xlabel("Epochs")
-		plt.ylabel("SSIM")
-		plt.legend()
-		plt.grid(True)
+		# Save a copy of Loss plot with lowest training and test loss and epoch annotated
+		Lowest_trainloss_index = train_losses.index(min(train_losses))
+		Lowest_testloss_index = test_losses.index(min(test_losses))
+		Lowest_trainloss_epoch = epochs[Lowest_trainloss_index]
+		Lowest_testloss_epoch = epochs[Lowest_testloss_index]
+		Lowest_trainloss_value = train_losses[Lowest_trainloss_index]
+		Lowest_testloss_value = test_losses[Lowest_testloss_index]
+
+		# Adjust the xytext position based on the Lowest_trainloss_epoch and Lowest_trainloss_value
+		Lowest_trainloss_xytext_x = Lowest_trainloss_epoch - 200 if Lowest_trainloss_epoch > 500 else Lowest_trainloss_epoch
+		Lowest_trainloss_xytext_y = Lowest_trainloss_value + 0.5 if Lowest_trainloss_value < 1 else Lowest_trainloss_value - 0.05
+
+		# Adjust the xytext position based on the Lowest_trainloss_epoch and Lowest_trainloss_value
+		Lowest_testloss_xytext_x = Lowest_testloss_epoch - 200 if Lowest_testloss_epoch > 500 else Lowest_testloss_epoch + 50
+		Lowest_testloss_xytext_y = Lowest_testloss_value + 1.2 if Lowest_testloss_value < 1 else Lowest_testloss_value - 0.05
+
+		ax_loss.annotate(f"Min Train loss: {Lowest_trainloss_value:.4f}\nEpoch: {Lowest_trainloss_epoch}", 
+					 xy=(Lowest_trainloss_epoch, Lowest_trainloss_value), 
+					 xytext=(Lowest_trainloss_xytext_x, Lowest_trainloss_xytext_y),
+					 arrowprops=dict(facecolor='black', arrowstyle='->'),
+					 bbox=dict(boxstyle="round", fc="w"))
+		ax_loss.annotate(f"Min Test loss: {Lowest_testloss_value:.4f}\nEpoch: {Lowest_testloss_epoch}", 
+					 xy=(Lowest_testloss_epoch, Lowest_testloss_value), 
+					 xytext=(Lowest_testloss_xytext_x, Lowest_testloss_xytext_y),
+					 arrowprops=dict(facecolor='black', arrowstyle='->'),
+					 bbox=dict(boxstyle="round", fc="w"))
+		fnamea = os.path.join(loss_plots_dir, 'loss_plot_ann_epoch_'+ str(epoch) + ".png")
+		f_loss.savefig(fnamea)
+		main_logger.info('Annotated Loss  plot saved at epoch %s', epoch)
+
+		f_ssim = plt.figure(figsize=(10, 6))
+		ax_ssim = f_ssim.add_subplot(111)
+		ax_ssim.plot(epochs, test_ssim, label="Test set SSIM")
+		ax_ssim.set_xlabel("Epochs")
+		ax_ssim.set_ylabel("SSIM")
+		ax_ssim.legend()
+		ax_ssim.grid(True)
 
 		ssim_fname = os.path.join(loss_plots_dir, 'ssim_plot_epoch_'+ str(epoch) + ".png")
-		plt.savefig(ssim_fname)
+		f_ssim.savefig(ssim_fname)
 		main_logger.info('SSIM plot saved at epoch %s', epoch)
 
-		plt.figure(figsize=(10, 6))
-		plt.plot(epochs, test_psnr, label="Test PSNR")
-		plt.xlabel("Epochs")
-		plt.ylabel("PSNR")
-		plt.legend()
-		plt.grid(True)
+		# Save a copy of SSIM plot with highest SSIM value and epoch annotated
+		highest_ssim_index = test_ssim.index(max(test_ssim))
+		highest_ssim_epoch = epochs[highest_ssim_index]
+		highest_ssim_value = test_ssim[highest_ssim_index]
+
+		# Adjust the xytext position based on the highest_ssim_epoch and highest_ssim_value
+		xytext_x = highest_ssim_epoch - 120 if highest_ssim_epoch > 800 else highest_ssim_epoch + 50
+		xytext_y = highest_ssim_value - 0.10 if highest_ssim_value > 0.6 else highest_ssim_value + 0.05
+
+		ax_ssim.annotate(f"Max SSIM: {highest_ssim_value:.4f}\nEpoch: {highest_ssim_epoch}", 
+					 xy=(highest_ssim_epoch, highest_ssim_value), 
+					 xytext=(xytext_x, xytext_y),
+					 arrowprops=dict(facecolor='black', arrowstyle='->'),
+					 bbox=dict(boxstyle="round", fc="w"))
+		ssima_fname = os.path.join(loss_plots_dir, 'ssim_plot_ann_epoch_'+ str(epoch) + ".png")
+		f_ssim.savefig(ssima_fname)
+		main_logger.info('Annotated SSIM  plot saved at epoch %s', epoch)
+
+		f_psnr = plt.figure(figsize=(10, 6))
+		ax_psnr = f_psnr.add_subplot(111)
+		ax_psnr.plot(epochs, test_psnr, label="Test set PSNR")
+		ax_psnr.set_xlabel("Epochs")
+		ax_psnr.set_ylabel("PSNR")
+		ax_psnr.legend()
+		ax_psnr.grid(True)
 
 		psnr_fname = os.path.join(loss_plots_dir, 'psnr_plot_epoch_'+ str(epoch) + ".png")
-		plt.savefig(psnr_fname)
+		f_psnr.savefig(psnr_fname)
 		main_logger.info('PSNR plot saved at epoch %s', epoch)
+
+		# Save a copy of PSNR plot with highest PSNR value and epoch annotated
+		highest_psnr_index = test_psnr.index(max(test_psnr))
+		highest_psnr_epoch = epochs[highest_psnr_index]
+		highest_psnr_value = test_psnr[highest_psnr_index]
+
+		# Adjust the xytext position based on the highest_ssim_epoch and highest_ssim_value
+		xytext_x = highest_psnr_epoch - 120 if highest_psnr_epoch > 800 else highest_psnr_epoch + 50
+		xytext_y = highest_psnr_value - 5.5 if highest_psnr_value > 28 else highest_psnr_value + 1
+
+		ax_psnr.annotate(f"Max PSNR: {highest_psnr_value:.4f}\nEpoch: {highest_psnr_epoch}", 
+					 xy=(highest_psnr_epoch, highest_psnr_value), 
+					 xytext=(xytext_x, xytext_y),
+					 arrowprops=dict(facecolor='black', arrowstyle='->'),
+					 bbox=dict(boxstyle="round", fc="w"))
+		psnra_fname = os.path.join(loss_plots_dir, 'psnr_plot_ann_epoch_'+ str(epoch) + ".png")
+		f_psnr.savefig(psnra_fname)
+		main_logger.info('Annotated PSNR  plot saved at epoch %s', epoch)
 
 
 		print (f"SSIM: {test_ssim[-1]}, PSNR: {test_psnr[-1]}")
