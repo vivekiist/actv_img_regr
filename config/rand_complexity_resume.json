@@ -1,7 +1,7 @@
 {
 	"_comment": "This json file provides parameter configurations.",
 	"no_cuda" : false,
-    "data_parallel" : false,
+    "data_parallel" : true,
 	"seed" : 1,
     "root_dir_train": "../data/Isabel_pressure_volume_images/train/",
 	"root_dir_test": "../data/Isabel_pressure_volume_images/test/",
@@ -9,7 +9,7 @@
 	"param_file_test" : "isabel_pr_viewparams_test.csv",    
     "root_out_dir" : "../outputs/Isabel_mse_active_random/",
 	"resume": 1,
-    "chkpt": "../data/chk_99.pth.tar",
+    "chkpt": "../data/base/chk_99.pth.tar",
     "dvp" : 3,
     "dvpe" : 512,
     "ch" : 64,
@@ -17,7 +17,7 @@
     "use_mse_loss" : 1,
     "use_vgg_loss" : 1,
     "use_gan_loss" : 0,
-    "gan_loss_weight" : 1.0,
+    "gan_loss_weight" : 0.01,
     "vgg_loss_weight" : 1.0,
     "mse_loss_weight" : 1.0,
     "lr" : 1e-3,
@@ -26,7 +26,7 @@
     "beta2" : 0.999,
     "batch_size" : 400,
     "start_epoch" : 100,
-    "epochs" : 600,
+    "epochs" : 1000,
 	"log_every" : 1,
 	"check_every" : 50,
 	"no_active_learning" : false,
@@ -35,6 +35,6 @@
 	"varname" : "ImageScalars",
 	"num_new_samples" : 100,
 	"query_strategy" : "rand_complexity",
-	"sampling_budget" : 10000
+	"sampling_budget" : 8000
 }
 

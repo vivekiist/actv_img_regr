@@ -26,7 +26,7 @@
     "beta2" : 0.999,
     "batch_size" : 400,
     "start_epoch" : 100,
-    "epochs" : 1000,
+    "epochs" : 1200,
 	"log_every" : 1,
 	"check_every" : 50,
 	"no_active_learning" : false,
@@ -34,7 +34,7 @@
     "raw_inp_file" : "../data/Isabel_pressure_raw/Pf25.binLE.raw_corrected_2_subsampled.vti",
 	"varname" : "ImageScalars",
 	"num_new_samples" : 100,
-	"query_strategy" : "rand_VGG",
-	"sampling_budget" : 8000
+	"query_strategy" : "Random",
+	"sampling_budget" : 10000
 }
 

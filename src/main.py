@@ -95,6 +95,7 @@ def select_uncertain_samples(args, model, train_loader):
 		# Create pairs of phi and theta
 		vparams_selected = np.dstack([phi_values, theta_values])[0]
 		vparams_selected = vparams_selected.tolist()
+		return vparams_selected
 	else:
 		with torch.no_grad():
 			for i, sample in enumerate(train_loader):
@@ -161,15 +162,6 @@ def select_uncertain_samples(args, model, train_loader):
 						entropies.append(entropy)
 					uncertainty1 = np.array(entropies) 
 					num_samples = round(args.num_new_samples/2)
-				# elif args.query_strategy =="diversity":
-				# 	grayscale_images = transforms.functional.rgb_to_grayscale(image)
-				# 	np_array = grayscale_images.cpu().numpy()
-				# 	entropies = []
-				# 	for i in range(image.shape[0]):
-				# 		entropy = skimage.measure.shannon_entropy(np_array[i, 0]) 
-				# 		entropies.append(entropy)
-				# 	uncertainty1 = np.array(entropies) 
-				# 	num_samples = round(args.num_new_samples/2)
 				uncertainties.extend(uncertainty1.tolist())
 		# Get indices of samples with highest uncertainty
 		uncertain_indices = np.argsort(uncertainties)
@@ -186,47 +178,7 @@ def select_uncertain_samples(args, model, train_loader):
 
 		return vparams_selected
 
-# def calculate_uncertainty(args, output, image, vgg=None):
-# 	# select device
-# 	args.cuda = not args.no_cuda and torch.cuda.is_available()
-# 	device = torch.device("cuda:0" if args.cuda else "cpu")
-# 	losstype = args.query_strategy
-# 	if losstype == "MSELoss":
-# 		uncertainty = nn.MSELoss(reduction='none')(image, output)
-# 		uncertainty1 = uncertainty.sum(dim=(1, 2, 3)) # sum over height,width and channels
-# 	elif losstype == "VGG":
-# 		norm_mean = torch.tensor([.485, .456, .406]).view(-1, 1, 1).to(device)
-# 		norm_std = torch.tensor([.229, .224, .225]).view(-1, 1, 1).to(device)
-# 		if vgg is None:
-# 			vgg = VGG19('relu1_2').eval()
-# 			if args.data_parallel and torch.cuda.device_count() > 1:
-# 				vgg = nn.DataParallel(vgg)
-# 			vgg.to(device)
-# 		# normalize
-# 		image = ((image + 1.) * .5 - norm_mean) / norm_std
-# 		output = ((output + 1.) * .5 - norm_mean) / norm_std
-# 		features = vgg(image)
-# 		output_features = vgg(output)
-# 		uncertainty = nn.MSELoss(reduction='none')(features, output_features)        
-# 		uncertainty1 = uncertainty.sum(dim=(1, 2, 3))
-# 	elif losstype =="rand_MSELoss":
-# 		uncertainty = nn.MSELoss(reduction='none')(image, output)
-# 		uncertainty1 = uncertainty.sum(dim=(1, 2, 3))
-# 	elif losstype =="complexity":
-# 		# https://www.hdm-stuttgart.de/~maucher/Python/MMCodecs/html/basicFunctions.html#calculate-entropy-of-text
-# 		# # https://unimatrixz.com/blog/latent-space-image-quality-with-entropy/#python-libraries-for-image-entropy-calculation
-# 		# image = cv2.imread(image_path)
-# 		# gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-# 		# _bins = 128
-# 		# hist, _ = np.histogram(gray_image.ravel(), bins=_bins, range=(0, _bins))
-# 		# prob_dist = hist / hist.sum()
-# 		# image_entropy = entropy(prob_dist, base=2)
-# 		# print(f"Image Entropy {image_entropy}")
-# 		pass
-# 	return uncertainty1
 
-
-# if __name__ == "__main__":    
 # setup_logging()
 timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 args = load_config(timestamp)
@@ -241,8 +193,6 @@ main_logger.info('Starting the application...')
 # select device
 args.cuda = not args.no_cuda and torch.cuda.is_available()
 device = torch.device("cuda:0" if args.cuda else "cpu")
-
-
 
 
 # set random seed
@@ -708,8 +658,8 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 		main_logger.info('Annotated PSNR  plot saved at epoch %s', epoch)
 
 
-		print (f"SSIM: {test_ssim[-1]}, PSNR: {test_psnr[-1]}")
-		print (f"Train Loss: {train_losses[-1]}, Test Loss: {test_losses[-1]}")
+		print (f"SSIM: {test_ssim[-1]: .4f}, PSNR: {test_psnr[-1]: .4f}")
+		print (f"Train Loss: {train_losses[-1]: .4f}, Test Loss: {test_losses[-1]: .4f}")
 
 runlog_file_handler.close()
 main_logger.info('Exiting the application...')

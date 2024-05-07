@@ -31,7 +31,7 @@ ax_loss.grid(True)
 # fname = os.path.join(loss_plots_dir, 'loss_plot_epoch_'+ str(epoch) + ".png")
 
 # plt.show() 
-f_loss.savefig("loss_plot.png")
+f_loss.savefig('loss_plot_epoch_'+ str(epoch) + ".png")
 # main_logger.info('Loss plot saved at epoch %s', epoch)
 
 # Save a copy of Loss plot with lowest training and test loss and epoch annotated
@@ -62,19 +62,19 @@ ax_loss.annotate(f"Min Test loss: {Lowest_testloss_value:.4f}\nEpoch: {Lowest_te
                 bbox=dict(boxstyle="round", fc="w"))
 # fnamea = os.path.join(loss_plots_dir, 'loss_plot_ann_epoch_'+ str(epoch) + ".png")
 # f_loss.show()
-f_loss.savefig("loss_plota.png")
+f_loss.savefig('loss_plot_ann_epoch_'+ str(epoch) + ".png")
 # main_logger.info('Annotated Loss  plot saved at epoch %s', epoch)
 
 
 f_ssim = plt.figure(figsize=(10, 6))
 ax_ssim = f_ssim.add_subplot(111)
 
-ax_ssim.plot(epochs, test_ssim, label="Test SSIM")
+ax_ssim.plot(epochs, test_ssim, label="Test set SIM")
 ax_ssim.set_xlabel("Epochs")
 ax_ssim.set_ylabel("SSIM")
 ax_ssim.legend()
 ax_ssim.grid(True)
-f_ssim.savefig("SSIM_plot.png")
+f_ssim.savefig('ssim_plot_epoch_'+ str(epoch) + ".png")
 
 # Save a copy of SSIM plot with highest SSIM value and epoch annotated
 highest_ssim_index = test_ssim.index(max(test_ssim))
@@ -92,20 +92,20 @@ ax_ssim.annotate(f"Highest SSIM: {highest_ssim_value:.4f}\nEpoch: {highest_ssim_
                 bbox=dict(boxstyle="round", fc="w"))
 # ssima_fname = os.path.join(loss_plots_dir, 'ssim_plot_ann_epoch_'+ str(epoch) + ".png")
 # f_ssim.show()
-f_ssim.savefig("SSIM_plota.png")
+f_ssim.savefig('ssim_plot_ann_epoch_'+ str(epoch) + ".png")
 
 
 
 f_psnr = plt.figure(figsize=(10, 6))
 ax_psnr = f_psnr.add_subplot(111)
-ax_psnr.plot(epochs, test_psnr, label="Test PSNR")
+ax_psnr.plot(epochs, test_psnr, label="Test set PSNR")
 ax_psnr.set_xlabel("Epochs")
 ax_psnr.set_ylabel("PSNR")
 ax_psnr.legend()
 ax_psnr.grid(True)
 
 # psnr_fname = os.path.join(loss_plots_dir, 'psnr_plot_epoch_'+ str(epoch) + ".png")
-f_psnr.savefig("PSNR_plot.png")
+f_psnr.savefig('psnr_plot_epoch_'+ str(epoch) + '.png')
 
 # Save a copy of PSNR plot with highest PSNR value and epoch annotated
 highest_psnr_index = test_psnr.index(max(test_psnr))
@@ -123,4 +123,4 @@ ax_psnr.annotate(f"Max PSNR: {highest_psnr_value:.4f}\nEpoch: {highest_psnr_epoc
                 bbox=dict(boxstyle="round", fc="w"))
 # psnra_fname = os.path.join(loss_plots_dir, 'psnr_plot_ann_epoch_'+ str(epoch) + ".png")
 # f_psnr.show()
-f_psnr.savefig("PSNR_plota.png")
+f_psnr.savefig('psnr_plot_ann_epoch_'+ str(epoch) + ".png")

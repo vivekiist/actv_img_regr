@@ -17,7 +17,7 @@
     "use_mse_loss" : 1,
     "use_vgg_loss" : 1,
     "use_gan_loss" : 0,
-    "gan_loss_weight" : 1.0,
+    "gan_loss_weight" : 0.01,
     "vgg_loss_weight" : 1.0,
     "mse_loss_weight" : 1.0,
     "lr" : 1e-3,
