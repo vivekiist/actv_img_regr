@@ -47,7 +47,8 @@ def vparams2azel(vparams):
 # select device
 device = torch.device("cuda:0")
 
-chkpt =  "../../outputs/Isabel_mse_active_random/base200ep/model/chk_199.pth.tar"
+chkpt = input("Enter the path to the model: ")
+# chkpt =  "../outputs/Isabel_mse_active_random/vgg_resume1500ep/model/chk_1499.pth.tar"
 lr = 1e-3
 betas=(0.9, 0.999)
 
@@ -71,9 +72,9 @@ test_dataset = IsabelDataset(
     transform=transforms.Compose([Normalize(), ToTensor()]))
 
 kwargs = {"num_workers": 4, "pin_memory": True}
-train_loader = DataLoader(train_dataset, batch_size=400,
+train_loader = DataLoader(train_dataset, batch_size=100,
                         shuffle=True, **kwargs)
-test_loader = DataLoader(test_dataset, batch_size=400,
+test_loader = DataLoader(test_dataset, batch_size=100,
                         shuffle=True, **kwargs)
 # model
 g_model = Generator(dvp=3,
@@ -89,34 +90,43 @@ g_optimizer = optim.Adam(g_model.parameters(), lr=lr,
 checkpoint = torch.load(chkpt)
 g_model.load_state_dict(checkpoint["g_model_state_dict"])
 g_optimizer.load_state_dict(checkpoint["g_optimizer_state_dict"])
-batch_train_losses = checkpoint["batch_train_losses"]
-train_losses = checkpoint["train_losses"]
-test_losses = checkpoint["test_losses"]
+# batch_train_losses = checkpoint["batch_train_losses"]
+# train_losses = checkpoint["train_losses"]
+# test_losses = checkpoint["test_losses"]
 
 
 g_model.eval()
 
+# LPIPS metric
+lpips_metric = piq.LPIPS(reduction='mean',
+                         mean = [0., 0., 0.],
+                         std = [1., 1., 1.]).to(device) # Setting mean and std to 0 and 1 respectively as dont need to renormalize images using imagenet statistics
+
 ssim_loss = 0.
 psnr_loss = 0.
+lpips_loss = 0.
 
 with torch.no_grad():
     for i, sample in enumerate(test_loader):
         image = sample["image"].to(device)
-        image = (image+ 1.) * .5
+        image2 = (image+ 1.) * .5
         vparams = sample["vparams"].to(device)
         fake_image = g_model(vparams)
-        fake_image = (fake_image+ 1.) * .5
+        fake_image2 = (fake_image+ 1.) * .5
         # test_loss += mse_criterion(image, fake_image).item() * len(image)
-        ssim_loss += piq.ssim(image, fake_image, data_range=1.).item()
-        psnr_loss += piq.psnr(image, fake_image, data_range=1., reduction='mean').item()
-
-        test_losses.append(ssim_loss)
-        print (f"\tTest set SSIM loss for Batch {i+1}/{len(test_loader)} is {ssim_loss:.4f}")
-        print (f"\tTest set PSNR loss for Batch {i+1}/{len(test_loader)} is {psnr_loss:.4f}")
+        ssim_loss += piq.ssim(image2, fake_image2, data_range=1.).item() * len(image)/len(test_loader.dataset)
+        psnr_loss += piq.psnr(image2, fake_image2, data_range=1., reduction='mean').item() * len(image)/len(test_loader.dataset)
+        # lpips_loss += piq.LPIPS(image, fake_image, reduction='mean').item() * len(image)/len(test_loader.dataset)
+        lpips_loss += lpips_metric(image, fake_image).item() * len(image)/len(test_loader.dataset)
+        # print (f"\tTest set SSIM loss for Batch {i+1}/{len(test_loader)} is {ssim_loss:.4f}")
+        # print (f"\tTest set PSNR loss for Batch {i+1}/{len(test_loader)} is {psnr_loss:.4f}")
+        # print (f"\tTest set LPIPS loss for Batch {i+1}/{len(test_loader)} is {lpips_loss:.4f}")
 
         # run_logger.info("\tTest set loss for epoch %d, Batch %d/%d is %.4f", epoch, i+1, len(test_loader), test_loss)
-avg_ssim_loss = ssim_loss/len(test_loader)
-avg_psnr_loss = psnr_loss/len(test_loader)
+avg_ssim_loss = ssim_loss
+avg_psnr_loss = psnr_loss
+avg_lpips_loss = lpips_loss
 
 print(f"\t====> Average Test set SSIM: \t\t{avg_ssim_loss:.4f}")
 print(f"\t====> Average Test set PSNR: \t\t{avg_psnr_loss:.4f}")
+print(f"\t====> Average Test set LPIPS: \t\t{avg_lpips_loss:.4f}")

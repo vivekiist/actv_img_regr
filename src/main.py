@@ -260,7 +260,7 @@ if args.use_vgg_loss:
 
 # mse_criterion = nn.MSELoss()
 mse_criterion = nn.MSELoss(reduction='mean')
-batch_train_losses, train_losses, batch_test_losses, batch_ssim, batch_psnr, test_losses, test_ssim, test_psnr = [], [], [], [], [], [], [], []
+batch_train_losses, train_losses, batch_test_losses, batch_ssim, batch_psnr, batch_lpips, test_losses, test_ssim, test_psnr, test_lpips = [], [], [], [], [], [], [], [], [], []
 d_losses, g_losses = [], []
 main_logger.info('MSE loss initialised.')
 
@@ -292,10 +292,12 @@ if args.resume:
 		batch_test_losses = checkpoint["batch_test_losses"]
 		batch_ssim = checkpoint["batch_ssim"]
 		batch_psnr = checkpoint["batch_psnr"]
+		batch_lpips = checkpoint["batch_lpips"]
 		train_losses = checkpoint["train_losses"]
 		test_losses = checkpoint["test_losses"]
 		test_ssim = checkpoint["test_ssim"]
 		test_psnr = checkpoint["test_psnr"]
+		test_lpips = checkpoint["test_lpips"]
 		main_logger.info('Loaded epoch %s from checkpoint %s.', checkpoint["epoch"], args.chkpt)
 
 # Active learning loop
@@ -450,6 +452,11 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 
 
 	with torch.no_grad():
+		# LPIPS metric
+		lpips_metric = piq.LPIPS(reduction='mean',
+								mean = [0., 0., 0.],
+								std = [1., 1., 1.]).to(device) # Setting mean and std to 0 and 1 respectively as dont need to renormalize images using imagenet statistics
+
 		for i, sample in enumerate(test_loader):
 			image = sample["image"].to(device)
 			vparams = sample["vparams"].to(device)
@@ -457,16 +464,12 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 			test_loss = 0.
 			test_loss += mse_criterion(image, fake_image) * len(image)/len(test_loader.dataset)
 
-			# ssim_loss = 0.
-			# psnr_loss = 0.
 			image2 = (image+ 1.) * .5
 			fake_image2 = (fake_image+ 1.) * .5
-			# ssim_loss = piq.ssim(image2, fake_image2, data_range=1.)
-			# psnr_loss = piq.psnr(image2, fake_image2, data_range=1., reduction='mean')
 
 			ssim_loss = piq.ssim(image2, fake_image2, data_range=1.) * len(image)/len(test_loader.dataset)
 			psnr_loss = piq.psnr(image2, fake_image2, data_range=1., reduction='mean') * len(image)/len(test_loader.dataset)
-
+			lpips_loss = lpips_metric(image, fake_image) * len(image)/len(test_loader.dataset)
 			# perceptual loss
 			if args.use_vgg_loss:
 				# normalize
@@ -490,20 +493,24 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 			batch_test_losses.append(test_loss.item())
 			batch_ssim.append(ssim_loss.item())
 			batch_psnr.append(psnr_loss.item())
+			batch_lpips.append(lpips_loss.item())
 			# print (f"\tTest set loss for epoch {epoch}, Batch {i+1}/{len(test_loader)} is {test_loss.item():.4f}")
 			run_logger.info("\tTest set loss for epoch %d, Batch %d/%d is %.4f", epoch, i+1, len(test_loader), test_loss.item())
 	# epoch_ssim = sum(batch_ssim[-len(test_loader):])/len(test_loader)
 	# epoch_psnr = sum(batch_psnr[-len(test_loader):])/len(test_loader)
 	epoch_ssim = sum(batch_ssim[-len(test_loader):])
 	epoch_psnr = sum(batch_psnr[-len(test_loader):])
+	epoch_lpips = sum(batch_lpips[-len(test_loader):])
 	epoch_test_loss = sum(batch_test_losses[-len(test_loader):])
 	print(f"\tEpoch: {epoch} Test loss: \t\t{epoch_test_loss:.4f}")
 	run_logger.info("\tEpoch: %d Test loss: \t\t\t\t%.4f", epoch, epoch_test_loss)
 	run_logger.info("\tEpoch: %d SSIM: \t\t\t\t%.4f", epoch, epoch_ssim)
 	run_logger.info("\tEpoch: %d PSNR: \t\t\t\t%.4f", epoch, epoch_psnr)
+	run_logger.info("\tEpoch: %d LPIPS: \t\t\t\t%.4f", epoch, epoch_lpips)
 	test_losses.append(epoch_test_loss)
 	test_ssim.append(epoch_ssim)
 	test_psnr.append(epoch_psnr)
+	test_lpips.append(epoch_lpips)
 	# saving...
 	if (((epoch+1) % args.check_every == 0) or (epoch == args.epochs-1)) :
 		print("=> saving checkpoint at epoch {}".format(epoch+1))
@@ -524,10 +531,12 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 						"batch_test_losses": batch_test_losses,
 						"batch_ssim": batch_ssim,
 						"batch_psnr": batch_psnr,
+						"batch_lpips": batch_lpips,
 						"train_losses": train_losses,
 						"test_losses": test_losses,
 						"test_ssim": test_ssim,
-						"test_psnr": test_psnr},
+						"test_psnr": test_psnr,
+						"test_lpips": test_lpips},
 						chkname)
 		else:
 			torch.save({"epoch": epoch + 1,
@@ -537,10 +546,12 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 						"batch_test_losses": batch_test_losses,
 						"batch_ssim": batch_ssim,
 						"batch_psnr": batch_psnr,
+						"batch_lpips": batch_lpips,
 						"train_losses": train_losses,
 						"test_losses": test_losses,
 						"test_ssim": test_ssim,
-						"test_psnr": test_psnr},
+						"test_psnr": test_psnr,
+						"test_lpips": test_lpips},
 						chkname)
 
 		torch.save(g_model.state_dict(), mname)
@@ -568,31 +579,36 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 		main_logger.info('Loss plot saved at epoch %s', epoch)
 
 		# Save a copy of Loss plot with lowest training and test loss and epoch annotated
-		Lowest_trainloss_index = train_losses.index(min(train_losses))
-		Lowest_testloss_index = test_losses.index(min(test_losses))
-		Lowest_trainloss_epoch = epochs[Lowest_trainloss_index]
-		Lowest_testloss_epoch = epochs[Lowest_testloss_index]
-		Lowest_trainloss_value = train_losses[Lowest_trainloss_index]
-		Lowest_testloss_value = test_losses[Lowest_testloss_index]
+		lowest_trainloss_index = train_losses.index(min(train_losses))
+		lowest_testloss_index = test_losses.index(min(test_losses))
+		lowest_trainloss_epoch = epochs[lowest_trainloss_index]
+		lowest_testloss_epoch = epochs[lowest_testloss_index]
+		lowest_trainloss_value = train_losses[lowest_trainloss_index]
+		lowest_testloss_value = test_losses[lowest_testloss_index]
 
-		# Adjust the xytext position based on the Lowest_trainloss_epoch and Lowest_trainloss_value
-		Lowest_trainloss_xytext_x = Lowest_trainloss_epoch - 200 if Lowest_trainloss_epoch > 500 else Lowest_trainloss_epoch
-		Lowest_trainloss_xytext_y = Lowest_trainloss_value + 0.5 if Lowest_trainloss_value < 1 else Lowest_trainloss_value - 0.05
+		# Get the current axis limits for loss plot
+		xlim, ylim = ax_loss.get_xlim(), ax_loss.get_ylim()
 
-		# Adjust the xytext position based on the Lowest_trainloss_epoch and Lowest_trainloss_value
-		Lowest_testloss_xytext_x = Lowest_testloss_epoch - 200 if Lowest_testloss_epoch > 500 else Lowest_testloss_epoch + 50
-		Lowest_testloss_xytext_y = Lowest_testloss_value + 1.2 if Lowest_testloss_value < 1 else Lowest_testloss_value - 0.05
+		# Adjust the annotation positions dynamically
+		lowest_trainloss_xytext_x = lowest_trainloss_epoch - 0.2 * (xlim[1] - xlim[0]) if lowest_trainloss_epoch > 0.5 * (xlim[1] - xlim[0]) else lowest_trainloss_epoch + 0.05 * (xlim[1] - xlim[0])
+		lowest_trainloss_xytext_y = lowest_trainloss_value + 0.1 * (ylim[1] - ylim[0]) if lowest_trainloss_value < 0.2 * (ylim[1] - ylim[0]) else lowest_trainloss_value - 0.05 * (ylim[1] - ylim[0])
 
-		ax_loss.annotate(f"Min Train loss: {Lowest_trainloss_value:.4f}\nEpoch: {Lowest_trainloss_epoch}", 
-					 xy=(Lowest_trainloss_epoch, Lowest_trainloss_value), 
-					 xytext=(Lowest_trainloss_xytext_x, Lowest_trainloss_xytext_y),
-					 arrowprops=dict(facecolor='black', arrowstyle='->'),
-					 bbox=dict(boxstyle="round", fc="w"))
-		ax_loss.annotate(f"Min Test loss: {Lowest_testloss_value:.4f}\nEpoch: {Lowest_testloss_epoch}", 
-					 xy=(Lowest_testloss_epoch, Lowest_testloss_value), 
-					 xytext=(Lowest_testloss_xytext_x, Lowest_testloss_xytext_y),
-					 arrowprops=dict(facecolor='black', arrowstyle='->'),
-					 bbox=dict(boxstyle="round", fc="w"))
+		lowest_testloss_xytext_x = lowest_testloss_epoch - 0.2 * (xlim[1] - xlim[0]) if lowest_testloss_epoch > 0.5 * (xlim[1] - xlim[0]) else lowest_testloss_epoch + 0.05 * (xlim[1] - xlim[0])
+		lowest_testloss_xytext_y = lowest_testloss_value + 0.2 * (ylim[1] - ylim[0]) if lowest_testloss_value < 0.2 * (ylim[1] - ylim[0]) else lowest_testloss_value - 0.05 * (ylim[1] - ylim[0])
+
+		ax_loss.annotate(f"Min Test loss: {lowest_testloss_value:.4f}\nEpoch: {lowest_testloss_epoch}", 
+						xy=(lowest_testloss_epoch, lowest_testloss_value), 
+						xytext=(lowest_testloss_xytext_x, lowest_testloss_xytext_y),
+						arrowprops=dict(facecolor='black', arrowstyle='->'),
+						bbox=dict(boxstyle="round", fc="w"))
+
+		ax_loss.annotate(f"Min Train loss: {lowest_trainloss_value:.4f}\nEpoch: {lowest_trainloss_epoch}", 
+						xy=(lowest_trainloss_epoch, lowest_trainloss_value), 
+						xytext=(lowest_trainloss_xytext_x, lowest_trainloss_xytext_y),
+						arrowprops=dict(facecolor='black', arrowstyle='->'),
+						bbox=dict(boxstyle="round", fc="w"))
+
+
 		fnamea = os.path.join(loss_plots_dir, 'loss_plot_ann_epoch_'+ str(epoch) + ".png")
 		f_loss.savefig(fnamea)
 		main_logger.info('Annotated Loss  plot saved at epoch %s', epoch)
@@ -614,15 +630,19 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 		highest_ssim_epoch = epochs[highest_ssim_index]
 		highest_ssim_value = test_ssim[highest_ssim_index]
 
-		# Adjust the xytext position based on the highest_ssim_epoch and highest_ssim_value
-		xytext_x = highest_ssim_epoch - 120 if highest_ssim_epoch > 800 else highest_ssim_epoch + 50
-		xytext_y = highest_ssim_value - 0.10 if highest_ssim_value > 0.6 else highest_ssim_value + 0.05
+		# Get the current axis limits for SSIM plot
+		xlim, ylim = ax_ssim.get_xlim(), ax_ssim.get_ylim()
+
+		# Adjust the annotation positions dynamically
+		xytext_x = highest_ssim_epoch - 0.1 * (xlim[1] - xlim[0]) if highest_ssim_epoch > 0.8 * (xlim[1] - xlim[0]) else highest_ssim_epoch + 0.05 * (xlim[1] - xlim[0])
+		xytext_y = highest_ssim_value - 0.3 * (ylim[1] - ylim[0]) if highest_ssim_value > 0.8 * (ylim[1] - ylim[0]) else highest_ssim_value + 0.05 * (ylim[1] - ylim[0])
 
 		ax_ssim.annotate(f"Max SSIM: {highest_ssim_value:.4f}\nEpoch: {highest_ssim_epoch}", 
-					 xy=(highest_ssim_epoch, highest_ssim_value), 
-					 xytext=(xytext_x, xytext_y),
-					 arrowprops=dict(facecolor='black', arrowstyle='->'),
-					 bbox=dict(boxstyle="round", fc="w"))
+						xy=(highest_ssim_epoch, highest_ssim_value), 
+						xytext=(xytext_x, xytext_y),
+						arrowprops=dict(facecolor='black', arrowstyle='->'),
+						bbox=dict(boxstyle="round", fc="w"))
+
 		ssima_fname = os.path.join(loss_plots_dir, 'ssim_plot_ann_epoch_'+ str(epoch) + ".png")
 		f_ssim.savefig(ssima_fname)
 		main_logger.info('Annotated SSIM  plot saved at epoch %s', epoch)
@@ -644,21 +664,59 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 		highest_psnr_epoch = epochs[highest_psnr_index]
 		highest_psnr_value = test_psnr[highest_psnr_index]
 
-		# Adjust the xytext position based on the highest_ssim_epoch and highest_ssim_value
-		xytext_x = highest_psnr_epoch - 120 if highest_psnr_epoch > 800 else highest_psnr_epoch + 50
-		xytext_y = highest_psnr_value - 5.5 if highest_psnr_value > 28 else highest_psnr_value + 1
+		# Get the current axis limits for PSNR plot
+		xlim, ylim = ax_psnr.get_xlim(), ax_psnr.get_ylim()
+
+		# Adjust the annotation positions dynamically
+		xytext_x = highest_psnr_epoch - 0.1 * (xlim[1] - xlim[0]) if highest_psnr_epoch > 0.8 * (xlim[1] - xlim[0]) else highest_psnr_epoch + 0.05 * (xlim[1] - xlim[0])
+		xytext_y = highest_psnr_value - 0.3 * (ylim[1] - ylim[0]) if highest_psnr_value > 0.8 * (ylim[1] - ylim[0]) else highest_psnr_value + 0.05 * (ylim[1] - ylim[0])
 
 		ax_psnr.annotate(f"Max PSNR: {highest_psnr_value:.4f}\nEpoch: {highest_psnr_epoch}", 
-					 xy=(highest_psnr_epoch, highest_psnr_value), 
-					 xytext=(xytext_x, xytext_y),
-					 arrowprops=dict(facecolor='black', arrowstyle='->'),
-					 bbox=dict(boxstyle="round", fc="w"))
+						xy=(highest_psnr_epoch, highest_psnr_value), 
+						xytext=(xytext_x, xytext_y),
+						arrowprops=dict(facecolor='black', arrowstyle='->'),
+						bbox=dict(boxstyle="round", fc="w"))
+
 		psnra_fname = os.path.join(loss_plots_dir, 'psnr_plot_ann_epoch_'+ str(epoch) + ".png")
 		f_psnr.savefig(psnra_fname)
 		main_logger.info('Annotated PSNR  plot saved at epoch %s', epoch)
 
+		f_lpips = plt.figure(figsize=(10, 6))
+		ax_lpips = f_lpips.add_subplot(111)
+		ax_lpips.plot(epochs, test_lpips, label="Test set LPIPS")
+		ax_lpips.set_xlabel("Epochs")
+		ax_lpips.set_ylabel("LPIPS")
+		ax_lpips.legend()
+		ax_lpips.grid(True)
 
-		print (f"SSIM: {test_ssim[-1]: .4f}, PSNR: {test_psnr[-1]: .4f}")
+		lpips_fname = os.path.join(loss_plots_dir, 'lpips_plot_epoch_'+ str(epoch) + ".png")
+		f_lpips.savefig(lpips_fname)
+		main_logger.info('LPIPS plot saved at epoch %s', epoch)
+
+		# Save a copy of LPIPS plot with lowest LPIPS value and epoch annotated
+		lowest_lpips_index = test_lpips.index(min(test_lpips))
+		lowest_lpips_epoch = epochs[lowest_lpips_index]
+		lowest_lpips_value = test_lpips[lowest_lpips_index]
+
+		# Get the current axis limits for LPIPS plot
+		xlim, ylim = ax_lpips.get_xlim(), ax_lpips.get_ylim()
+
+		# Adjust the annotation positions dynamically
+		xytext_x = lowest_lpips_epoch - 0.5 * (xlim[1] - xlim[0]) if lowest_lpips_epoch > 0.8 * (xlim[1] - xlim[0]) else lowest_lpips_epoch + 0.05 * (xlim[1] - xlim[0])
+		xytext_y = lowest_lpips_value + 0.3 * (ylim[1] - ylim[0]) if lowest_lpips_value < 0.2 * (ylim[1] - ylim[0]) else lowest_lpips_value - 0.05 * (ylim[1] - ylim[0])
+
+		ax_lpips.annotate(f"Min LPIPS: {lowest_lpips_value:.4f}\nEpoch: {lowest_lpips_epoch}", 
+						xy=(lowest_lpips_epoch, lowest_lpips_value), 
+						xytext=(xytext_x, xytext_y),
+						arrowprops=dict(facecolor='black', arrowstyle='->'),
+						bbox=dict(boxstyle="round", fc="w"))
+
+		lpipsa_fname = os.path.join(loss_plots_dir, 'lpips_plot_ann_epoch_'+ str(epoch) + ".png")
+		f_lpips.savefig(lpipsa_fname)
+		main_logger.info('Annotated LPIPS  plot saved at epoch %s', epoch)
+
+
+		print (f"SSIM: {test_ssim[-1]: .4f}, PSNR: {test_psnr[-1]: .4f}, LPIPS: {test_lpips[-1]: .4f}")
 		print (f"Train Loss: {train_losses[-1]: .4f}, Test Loss: {test_losses[-1]: .4f}")
 
 runlog_file_handler.close()

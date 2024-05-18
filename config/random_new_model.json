@@ -1,7 +1,7 @@
 {
 	"_comment": "This json file provides parameter configurations.",
 	"no_cuda" : false,
-    "data_parallel" : false,
+    "data_parallel" : true,
 	"seed" : 1,
     "root_dir_train": "../data/Isabel_pressure_volume_images/train/",
 	"root_dir_test": "../data/Isabel_pressure_volume_images/test/",
