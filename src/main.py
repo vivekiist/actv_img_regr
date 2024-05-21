@@ -449,8 +449,6 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 	if args.use_gan_loss:
 		d_model.eval()
 	
-
-
 	with torch.no_grad():
 		# LPIPS metric
 		lpips_metric = piq.LPIPS(reduction='mean',
@@ -718,6 +716,22 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 
 		print (f"SSIM: {test_ssim[-1]: .4f}, PSNR: {test_psnr[-1]: .4f}, LPIPS: {test_lpips[-1]: .4f}")
 		print (f"Train Loss: {train_losses[-1]: .4f}, Test Loss: {test_losses[-1]: .4f}")
+		
+		comparison_dir = os.path.join(args.root_out_dir, "test_set_comparison")
+		os.makedirs(comparison_dir, exist_ok=True)
+		for i, sample in enumerate(test_loader):
+			image = sample["image"].to(device)
+			vparams = sample["vparams"].to(device)
+			fake_image = g_model(vparams)
+			num_rows = args.batch_size//10
+			comparison = torch.empty(0, *image.shape[1:], device=device)
+			for j in range(num_rows):
+				real_images = image[j*10:(j+1)*10]
+				fake_images = fake_image[j*10:(j+1)*10]
+				comparison = torch.cat((comparison, real_images, fake_images), dim=0)
+		    
+			fname = os.path.join(comparison_dir, f'test_batch_{i}.png')
+			save_image(((comparison.cpu() + 1.) * 0.5), fname, nrow=10)					  
 
 runlog_file_handler.close()
 main_logger.info('Exiting the application...')
