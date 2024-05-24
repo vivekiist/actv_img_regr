@@ -25,8 +25,13 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision.utils import save_image
 from torchvision import transforms, utils
 
-from model.isabel import *
+from ray import tune
+from ray import train
+from ray.train import Checkpoint, get_checkpoint
+from ray.tune.schedulers import ASHAScheduler
+import ray.cloudpickle as pickle
 
+from model.isabel import *
 
 from model.generator import Generator
 from model.discriminator import Discriminator
@@ -34,13 +39,6 @@ from model.vgg19 import VGG19
 
 from utils.logger_utils import setup_logger
 from utils.config_setter import load_config
-
-# from data_processing.processor import process_data
-# from model_training.trainer import train
-
-# CONFIG_DIR = "../config"
-# LOG_DIR = "../logs"
-
 
 def weights_init(m):
 	if isinstance(m, nn.Linear):
@@ -60,11 +58,29 @@ def add_sn(m):
 	else:
 		return m
 
-def genRandList(start, end, num):
-	res = []
-	for j in range(num): 
-		res.append(random.uniform(start, end)) 
-	return res 
+def load_data(main_logger, args):
+	# transform = transforms.Compose(
+	# 	[transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
+	# )
+
+	# dataset creation
+	train_dataset = IsabelDataset(
+		root=args.root_dir_train,
+		param_file = args.param_file_train,
+		train=True,
+		test=False,
+		transform=transforms.Compose([Normalize(), ToTensor()]))
+	main_logger.info('Train dataset created.')
+
+	test_dataset = IsabelDataset(
+		root=args.root_dir_test,
+		param_file = args.param_file_test,
+		train=False,
+		test=True,
+		transform=transforms.Compose([Normalize(), ToTensor()]))
+	main_logger.info('Test dataset created.')
+
+	return train_dataset, test_dataset
 
 def vparams2azel(vparams):
 	azel = []
@@ -432,7 +448,6 @@ def last_epoch_actions(args, main_logger, g_model, epoch, train_losses, test_los
 		fname = os.path.join(comparison_dir, f'test_batch_{i}.png')
 		save_image(((comparison.cpu() + 1.) * 0.5), fname, nrow=10)
 
-
 def train_model():	
 	# setup_logging()
 	LOG_DIR = "logs"
@@ -440,6 +455,7 @@ def train_model():
 	run_log_file = 'run_logger.log'
 	timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 	args = load_config(timestamp)
+
 	# set random seed
 	np.random.seed(args.seed)
 	torch.manual_seed(args.seed)
@@ -526,25 +542,8 @@ def train_model():
 			test_psnr = checkpoint["test_psnr"]
 			test_lpips = checkpoint["test_lpips"]
 			main_logger.info('Loaded epoch %s from checkpoint %s.', checkpoint["epoch"], args.chkpt)
-
-
-	# dataset creation
-	train_dataset = IsabelDataset(
-		root=args.root_dir_train,
-		param_file = args.param_file_train,
-		train=True,
-		test=False,
-		transform=transforms.Compose([Normalize(), ToTensor()]))
-	main_logger.info('Train dataset created.')
-
-	test_dataset = IsabelDataset(
-		root=args.root_dir_test,
-		param_file = args.param_file_test,
-		train=False,
-		test=True,
-		transform=transforms.Compose([Normalize(), ToTensor()]))
-	main_logger.info('Test dataset created.')
-
+	
+	train_dataset, test_dataset = load_data(main_logger, args)
 	kwargs = {"num_workers": 4, "pin_memory": True} if args.cuda else {}
 	train_loader = DataLoader(train_dataset, batch_size=args.batch_size,
 							shuffle=True, **kwargs)
@@ -560,8 +559,6 @@ def train_model():
 		g_model.train()
 		if args.use_gan_loss:
 			d_model.train()
-		
-		train_loss = 0.0
 
 		for i, sample in enumerate(train_loader):
 			loss = 0.0
@@ -606,7 +603,6 @@ def train_model():
 
 			loss.backward()
 			g_optimizer.step()
-			# train_loss += loss.item() * len(image)
 
 			if (epoch%10 == 0 or epoch == args.epochs-1) and i == 0: #save comparison every 10th epoch & last epoch & first batch
 				n = min(args.batch_size, 8)

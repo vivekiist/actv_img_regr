@@ -216,7 +216,7 @@ test_dataset = IsabelDataset(
     transform=transforms.Compose([Normalize(), ToTensor()]))
 main_logger.info('Test dataset created.')
 
-kwargs = {"num_workers": 4, "pin_memory": True} if args.cuda else {}
+kwargs = {"num_workers": 8, "pin_memory": True} if args.cuda else {}
 train_loader = DataLoader(train_dataset, batch_size=args.batch_size,
                         shuffle=True, **kwargs)
 test_loader = DataLoader(test_dataset, batch_size=args.batch_size,
