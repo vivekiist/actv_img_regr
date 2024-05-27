@@ -1,35 +1,17 @@
-import sys
-import logging.config
 import os
-from datetime import datetime
-
-import subprocess
-import random
-
-
 import numpy as np
-import pandas as pd
 from tqdm import tqdm
-import matplotlib.pyplot as plt
-import json
-import skimage.measure
-# import piq
-
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim as optim
-from torch.autograd import Variable
-from torch.utils.data import Dataset, DataLoader, random_split
-from torchvision.utils import save_image
-from torchvision import transforms, utils
+from torch.utils.data import DataLoader, random_split
+from torchvision import transforms
 from functools import partial
 import tempfile
 from pathlib import Path
 
-from ray import tune
-from ray import train
+from ray import train, tune
 from ray.train import Checkpoint, get_checkpoint
 from ray.tune.schedulers import ASHAScheduler
 import ray.cloudpickle as pickle
@@ -37,10 +19,8 @@ import ray.cloudpickle as pickle
 from model.isabel import *
 
 from model.generator import Generator
-from model.discriminator import Discriminator
 from model.vgg19 import VGG19
 
-# from utils.logger_utils import setup_logger
 from utils.config_setter2 import load_config
 
 def weights_init(m):
@@ -54,18 +34,12 @@ def weights_init(m):
 			nn.init.zeros_(m.bias)
 
 def load_data(args):
-	# transform = transforms.Compose(
-	# 	[transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
-	# )
-
-	# dataset creation
 	train_dataset = IsabelDataset(
 		root=args.root_dir_train,
 		param_file = args.param_file_train,
 		train=True,
 		test=False,
 		transform=transforms.Compose([Normalize(), ToTensor()]))
-	# main_logger.info('Train dataset created.')
 
 	test_dataset = IsabelDataset(
 		root=args.root_dir_test,
@@ -73,12 +47,10 @@ def load_data(args):
 		train=False,
 		test=True,
 		transform=transforms.Compose([Normalize(), ToTensor()]))
-	# main_logger.info('Test dataset created.')
 
 	return train_dataset, test_dataset
 
 def test_accuracy(args, g_model, vgg, test_loader, mse_criterion, norm_mean, norm_std, d_model = None, device="cpu"):
-	# Testing loss on test data set 
 	g_model.eval()
 	batch_test_losses = []
 	with torch.no_grad():
@@ -89,9 +61,7 @@ def test_accuracy(args, g_model, vgg, test_loader, mse_criterion, norm_mean, nor
 			test_loss = 0.
 			test_loss += mse_criterion(image, fake_image) * len(image)/len(test_loader.dataset)
 
-			# perceptual loss
 			if args.use_vgg_loss:
-				# normalize
 				image1 = ((image + 1.) * .5 - norm_mean) / norm_std
 				fake_image1 = ((fake_image + 1.) * .5 - norm_mean) / norm_std
 				features = vgg(image1)
@@ -107,11 +77,9 @@ def test_accuracy(args, g_model, vgg, test_loader, mse_criterion, norm_mean, nor
 def train_model(config):	
 	args = load_config()
 
-	# set random seed
 	np.random.seed(args.seed)
 	torch.manual_seed(args.seed)
 
-	# select device
 	args.cuda = not args.no_cuda and torch.cuda.is_available()
 	device = torch.device("cuda:0" if args.cuda else "cpu")
 
@@ -164,8 +132,6 @@ def train_model(config):
 							shuffle=True, **kwargs)
 	val_loader = DataLoader(val_subset, batch_size=args.batch_size,
 							shuffle=True, **kwargs)
-	# test_loader = DataLoader(test_dataset, batch_size=args.batch_size,
-	# 						shuffle=True, **kwargs)
 
 	for epoch in tqdm(range(args.start_epoch, args.epochs)):
 
@@ -243,59 +209,70 @@ def train_model(config):
 			)
 	print("Finished Training")
 
-def main(num_samples=100, max_num_epochs=10, gpus_per_trial=(1/16)):
-	args = load_config()
-	# data_dir = os.path.abspath("./data")
-	parent_path = os.path.abspath(os.path.join(args.root_dir_train, os.pardir))
-	data_dir = parent_path
-	train_dataset, test_dataset = load_data(args)
-	config = {
-		"lr": tune.loguniform(1e-4, 1e-1),
-		"batch_size": tune.choice([16, 32, 64, 128, 256, 512]),
-	}
-	scheduler = ASHAScheduler(
-		metric="loss",
-		mode="min",
-		max_t=max_num_epochs,
-		grace_period=1,
-		reduction_factor=2,
-	)
-	result = tune.run(
-		partial(train_model, data_dir=data_dir),
-		resources_per_trial={"cpu": 2, "gpu": gpus_per_trial},
-		config=config,
-		num_samples=num_samples,
-		scheduler=scheduler,
-	)
+# def main(num_samples=100, max_num_epochs=10, gpus_per_trial=(1/16)):
+num_samples=100
+max_num_epochs=10
+gpus_per_trial=0.05
+args = load_config()
+# data_dir = os.path.abspath("./data")
+parent_path = os.path.abspath(os.path.join(args.root_dir_train, os.pardir))
+data_dir = parent_path
+train_dataset, test_dataset = load_data(args)
+config = {
+	"lr": tune.loguniform(1e-4, 1e-1),
+	"batch_size": tune.choice([16, 32, 64, 128, 256, 512]),
+}
+scheduler = ASHAScheduler(
+	metric="loss",
+	mode="min",
+	max_t=max_num_epochs,
+	grace_period=1,
+	reduction_factor=2,
+)
+result = tune.run(
+	train_model,
+	resources_per_trial={"cpu": 2, "gpu": gpus_per_trial},
+	config=config,
+	num_samples=num_samples,
+	scheduler=scheduler,
+)
 
-	best_trial = result.get_best_trial("loss", "min", "last")
-	print(f"Best trial config: {best_trial.config}")
-	print(f"Best trial final validation loss: {best_trial.last_result['loss']}")
-	# print(f"Best trial final validation accuracy: {best_trial.last_result['accuracy']}")
+# result = tune.run(
+# 	partial(train_model, data_dir=data_dir),
+# 	resources_per_trial={"cpu": 2, "gpu": gpus_per_trial},
+# 	config=config,
+# 	num_samples=num_samples,
+# 	scheduler=scheduler,
+# )
 
-	g_model = Generator(dvp=args.dvp, 
-						dvpe=args.dvpe,
-						ch=args.ch)
-	g_model.apply(weights_init)
+best_trial = result.get_best_trial("loss", "min", "last")
+print(f"Best trial config: {best_trial.config}")
+print(f"Best trial final validation loss: {best_trial.last_result['loss']}")
+# print(f"Best trial final validation accuracy: {best_trial.last_result['accuracy']}")
 
-
-	device = "cpu"
-	if torch.cuda.is_available():
-		device = "cuda:0"
-		if gpus_per_trial > 1:
-			g_model = nn.DataParallel(g_model)
-	g_model.to(device)
-
-	best_checkpoint = result.get_best_checkpoint(trial=best_trial, metric="loss", mode="min")
-	with best_checkpoint.as_directory() as checkpoint_dir:
-		data_path = Path(checkpoint_dir) / "data.pkl"
-		with open(data_path, "rb") as fp:
-			best_checkpoint_data = pickle.load(fp)
-
-		g_model.load_state_dict(best_checkpoint_data["net_state_dict"])
-		test_acc = test_accuracy(g_model, device)
-		print("Best trial test set accuracy: {}".format(test_acc))
+g_model = Generator(dvp=args.dvp, 
+					dvpe=args.dvpe,
+					ch=args.ch)
+g_model.apply(weights_init)
 
 
-if __name__ == "__main__":
-	main(num_samples=100, max_num_epochs=10, gpus_per_trial=(1/16))
+device = "cpu"
+if torch.cuda.is_available():
+	device = "cuda:0"
+	if gpus_per_trial > 1:
+		g_model = nn.DataParallel(g_model)
+g_model.to(device)
+
+best_checkpoint = result.get_best_checkpoint(trial=best_trial, metric="loss", mode="min")
+with best_checkpoint.as_directory() as checkpoint_dir:
+	data_path = Path(checkpoint_dir) / "data.pkl"
+	with open(data_path, "rb") as fp:
+		best_checkpoint_data = pickle.load(fp)
+
+	g_model.load_state_dict(best_checkpoint_data["net_state_dict"])
+	test_acc = test_accuracy(g_model, device)
+	print("Best trial test set accuracy: {}".format(test_acc))
+
+
+# if __name__ == "__main__":
+# 	main(num_samples=100, max_num_epochs=10, gpus_per_trial=0.05)
