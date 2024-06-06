@@ -20,6 +20,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.autograd import Variable
 from torch.utils.data import Dataset, DataLoader
 from torchvision.utils import save_image
@@ -64,10 +65,10 @@ def add_sn(m):
 		return m
 
 def genRandList(start, end, num):
-    res = []
-    for j in range(num): 
-        res.append(random.uniform(start, end)) 
-    return res 
+	res = []
+	for j in range(num): 
+		res.append(random.uniform(start, end)) 
+	return res 
 
 def vparams2azel(vparams):
 	azel = []
@@ -201,26 +202,26 @@ torch.manual_seed(args.seed)
 
 # dataset creation
 train_dataset = IsabelDataset(
-    root=args.root_dir_train,
+	root=args.root_dir_train,
 	param_file = args.param_file_train,
-    train=True,
-    test=False,
-    transform=transforms.Compose([Normalize(), ToTensor()]))
+	train=True,
+	test=False,
+	transform=transforms.Compose([Normalize(), ToTensor()]))
 main_logger.info('Train dataset created.')
 
 test_dataset = IsabelDataset(
-    root=args.root_dir_test,
+	root=args.root_dir_test,
 	param_file = args.param_file_test,
-    train=False,
-    test=True,
-    transform=transforms.Compose([Normalize(), ToTensor()]))
+	train=False,
+	test=True,
+	transform=transforms.Compose([Normalize(), ToTensor()]))
 main_logger.info('Test dataset created.')
 
 kwargs = {"num_workers": 8, "pin_memory": True} if args.cuda else {}
 train_loader = DataLoader(train_dataset, batch_size=args.batch_size,
-                        shuffle=True, **kwargs)
+						shuffle=True, **kwargs)
 test_loader = DataLoader(test_dataset, batch_size=args.batch_size,
-                        shuffle=True, **kwargs)
+						shuffle=True, **kwargs)
 main_logger.info('Train & Test dataloader created.')
 
 # model
@@ -268,6 +269,11 @@ main_logger.info('MSE loss initialised.')
 g_optimizer = optim.Adam(g_model.parameters(), lr=args.lr,
 						betas=(args.beta1, args.beta2))
 main_logger.info('Optimizer for Generator model initialised.')
+
+# Set up the ReduceLROnPlateau scheduler
+scheduler = ReduceLROnPlateau(g_optimizer, mode='min', factor=0.5, patience=20, verbose=True)
+main_logger.info('ReduceLROnPlateau scheduler initialised.')
+
 
 if args.use_gan_loss:
 	d_optimizer = optim.Adam(d_model.parameters(), lr=args.d_lr,
@@ -382,9 +388,9 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 	print(f"\n====> Epoch: {epoch} Train loss: \t\t\t{epoch_loss:.4f}")
 	run_logger.info('====> Epoch: %d Train loss: \t\t\t\t\t%.4f\n', epoch, epoch_loss)
 	train_losses.append(epoch_loss)
-    ##########################################
-    ## Active learning section
-    ##########################################
+	##########################################
+	## Active learning section
+	##########################################
 	if (not args.no_active_learning) and (len(train_dataset) < args.sampling_budget):
 		# select uncertain samples
 		print("Selecting samples for generation")	
@@ -509,6 +515,8 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 	test_ssim.append(epoch_ssim)
 	test_psnr.append(epoch_psnr)
 	test_lpips.append(epoch_lpips)
+	
+	scheduler.step(epoch_test_loss)
 	# saving...
 	if (((epoch+1) % args.check_every == 0) or (epoch == args.epochs-1)) :
 		print("=> saving checkpoint at epoch {}".format(epoch+1))
@@ -729,7 +737,7 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 				real_images = image[j*10:(j+1)*10]
 				fake_images = fake_image[j*10:(j+1)*10]
 				comparison = torch.cat((comparison, real_images, fake_images), dim=0)
-		    
+			
 			fname = os.path.join(comparison_dir, f'test_batch_{i}.png')
 			save_image(((comparison.cpu() + 1.) * 0.5), fname, nrow=10)					  
 

@@ -1,13 +1,13 @@
-import os
+# import os
 import numpy as np
-from tqdm import tqdm
+# from tqdm import tqdm
 
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, random_split
 from torchvision import transforms
-from functools import partial
+# from functools import partial
 import tempfile
 from pathlib import Path
 from argparse import Namespace
@@ -87,44 +87,44 @@ def load_config():
 	"no_cuda" : False,
     "data_parallel" : True,
 	"seed" : 1,
-    "root_dir_train": "/users/mtech/vivekg/actv_img_regr/data/Isabel_pressure_volume_images/4/train/",
-	"root_dir_test": "/users/mtech/vivekg/actv_img_regr/data/Isabel_pressure_volume_images/4/test/",
-    "param_file_train" : "isabel_pr_viewparams_train.csv",
-	"param_file_test" : "isabel_pr_viewparams_test.csv",    
-    "root_out_dir" : "/users/mtech/vivekg/actv_img_regr/outputs/Isabel_mse_active_random/",
-	"resume": 0,
-    "chkpt": "",
+    "root_dir_train": "/data1/vivekg/actv_img_regr/data/vortex_volume_images/train/",
+	"root_dir_test": "/data1/vivekg/actv_img_regr/data/vortex_volume_images/test/",
+    "param_file_train" : "vortex_viewparams_train.csv",
+	"param_file_test" : "vortex_viewparams_test.csv",    
+    # "root_out_dir" : "/data1/vivekg/actv_img_regr/outputs/vortex_out/",
+	# "resume": 0,
+    # "chkpt": "",
     "dvp" : 3,
     "dvpe" : 512,
     "ch" : 64,
-    "sn" : 0,
+    # "sn" : 0,
     "use_mse_loss" : 1,
     "use_vgg_loss" : 1,
-    "use_gan_loss" : 0,
-    "gan_loss_weight" : 0.01,
+    # "use_gan_loss" : 0,
+    # "gan_loss_weight" : 0.01,
     "vgg_loss_weight" : 1.0,
     "mse_loss_weight" : 1.0,
-    "lr" : 1e-3,
-    "d_lr" : 1e-3,
+    # "lr" : 1e-3,
+    # "d_lr" : 1e-3,
     "beta1" : 0.9,
     "beta2" : 0.999,
     "batch_size" : 10,
     "start_epoch" : 0,
-    "epochs" : 1700,
-	"log_every" : 1,
-	"check_every" : 50,
-	"no_active_learning" : False,
-    "data_gen_script" : "./gen_img4.py",
-    "raw_inp_file" : "../data/Isabel_pressure_raw/Pf25.binLE.raw_corrected_2_subsampled.vti",
-	"varname" : "ImageScalars",
-	"num_new_samples" : 100,
-	"query_strategy" : "VGG",
-	"sampling_budget" : 8000
+    "epochs" : 600
+	# "log_every" : 1,
+	# "check_every" : 50,
+	# "no_active_learning" : False,
+    # "data_gen_script" : "./gen_img4.py",
+    # "raw_inp_file" : "/data1/vivekg/actv_img_regr/data/vortex_raw/vortex_15.vti",
+	# "varname" : "ImageScalars",
+	# "num_new_samples" : 100,
+	# "query_strategy" : "VGG",
+	# "sampling_budget" : 8192
 }
 
 	return Namespace(**config)
 
-def train_model(config):	
+def train_model_vortex(config):	
 	args = load_config()
 
 	np.random.seed(args.seed)
@@ -286,7 +286,7 @@ scheduler = ASHAScheduler(
 	reduction_factor=2,
 )
 result = tune.run(
-	train_model,
+	train_model_vortex,
 	resources_per_trial={"cpu": 2, "gpu": gpus_per_trial},
 	config=config,
 	num_samples=40,
@@ -294,14 +294,6 @@ result = tune.run(
 	storage_path = '/data1/vivekg/ray_results',
 	resume="AUTO"
 )
-
-# result = tune.run(
-# 	partial(train_model, data_dir=data_dir),
-# 	resources_per_trial={"cpu": 2, "gpu": gpus_per_trial},
-# 	config=config,
-# 	num_samples=num_samples,
-# 	scheduler=scheduler,
-# )
 
 best_trial = result.get_best_trial("loss", "min", "last")
 print(f"Best trial config: {best_trial.config}")
