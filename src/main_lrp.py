@@ -88,7 +88,7 @@ def select_uncertain_samples(args, model, train_loader):
 
 	# select device
 	args.cuda = not args.no_cuda and torch.cuda.is_available()
-	device = torch.device("cuda:0" if args.cuda else "cpu")
+	device = torch.device("cuda:1" if args.cuda else "cpu")
 
 	if args.query_strategy == "Random":
 		phi_values = np.random.uniform(-90, 90, args.num_new_samples) #phi -90,90 elevation
@@ -193,7 +193,7 @@ main_logger.info('Starting the application...')
 
 # select device
 args.cuda = not args.no_cuda and torch.cuda.is_available()
-device = torch.device("cuda:0" if args.cuda else "cpu")
+device = torch.device("cuda:1" if args.cuda else "cpu")
 
 
 # set random seed
