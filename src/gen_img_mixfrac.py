@@ -1,21 +1,40 @@
 # trace generated using paraview version 5.10.1
 import numpy as np
+import os
+import json
+# import pstats
+import cProfile
+import argparse
+
 
 #### import the simple module from the paraview
 from paraview.simple import *
-#### disable automatic camera reset on 'Show'
-paraview.simple._DisableFirstRenderCameraReset()
 
-def mixfrac_volume(phi_values, theta_values):
+# parse arguments
+def parse_args():
+	parser = argparse.ArgumentParser(description="View Generator for Mixfrac Dataset")
+	parser.add_argument("--inFile", required=True, type=str, help="Path of the input dataset")
+	parser.add_argument("--varName", required=True, type=str, help="Name of the input variable to be visualised")
+	parser.add_argument("--view_params", required=True, help="List of [phi_value, theta_value] pairs")
+	parser.add_argument("--outPath", required=True, type=str, help="Path of the Output images and csv dataset")
+	return parser.parse_args()
+
+
+def mixfrac_volume(args):
+	# Extract all phi_values from phi_theta_pairs
+	phi_theta_pairs = np.array(json.loads(args.view_params))
+	phi_values = phi_theta_pairs[:, 0]
+	theta_values = phi_theta_pairs[:,1]
+	# print (phi_theta_pairs)
 	# create a new 'XML Image Data Reader'
-	jet_mixfrac_0041dat_2_subsampledvti = XMLImageDataReader(registrationName='jet_mixfrac_0041.dat_2_subsampled.vti', FileName=['../data/mixfrac_raw/jet_mixfrac_0041.dat_2_subsampled.vti'])
-	jet_mixfrac_0041dat_2_subsampledvti.PointArrayStatus = ['ImageScalars']
+	jet_mixfrac_0041dat_2_subsampledvti = XMLImageDataReader(FileName=args.inFile)
+	jet_mixfrac_0041dat_2_subsampledvti.PointArrayStatus = [args.varName]
+
 
 
 	## Now generate all the images and save their param values also
 	###################################################################
-	all_params = []
-	# Properties modified on jet_mixfrac_0041dat_2_subsampledvti
+	# all_params = []
 	jet_mixfrac_0041dat_2_subsampledvti.TimeArray = 'None'
 
 	# get active view
@@ -61,17 +80,17 @@ def mixfrac_volume(phi_values, theta_values):
 	jet_mixfrac_0041dat_2_subsampledvtiDisplay.SetScalarBarVisibility(renderView1, False)
 
 	camera=GetActiveCamera()
-	for i in range(len(phi_values)):
-		if i%100 == 0:
-			print ('generating sample: ' + str(i))
+	for i in range(len(phi_theta_pairs)):
+		# if i%10 == 0:
+		# 	print ('generating sample: ' + str(i))
 		renderView1.ResetCamera()
 		camera.Elevation(phi_values[i]) 
 		camera.Azimuth(theta_values[i])
 		renderView1.Update()
 
-		all_params.append([phi_values[i],theta_values[i]])
-		outfile = '../data/mixfrac_volume_images/test/' \
-					+ str("{:.4f}".format(phi_values[i])) + '_' + str("{:.4f}".format(theta_values[i])) + '.png'
+		# all_params.append([phi_values[i],theta_values[i]])
+		outfile = os.path.join(args.outPath, f"{phi_values[i]:.4f}_{theta_values[i]:.4f}.png")
+		# save image out
 		SaveScreenshot(outfile, 
 						renderView1, 
 						ImageResolution=[128, 128], 
@@ -79,16 +98,19 @@ def mixfrac_volume(phi_values, theta_values):
 		# undo camera
 		camera.Elevation(-phi_values[i])
 		camera.Azimuth(-theta_values[i])
-
-## write the csv file with phi and theta values
-	all_params  = np.asarray(all_params)
-	np.savetxt('../data/mixfrac_volume_images/test/mixfrac_viewparams_test.csv', \
-				all_params, delimiter=',')
+	
+#########################
 
 if __name__ == "__main__":
-	## regular sampled phi,theta vals
-	num_samples = 512
-	## Randomly generate value
-	phi_values = np.random.uniform(-90, 90, num_samples) #phi -90,90 elevation
-	theta_values = np.random.uniform(0,360, num_samples) #theta 0 - 360 azimuth
-	mixfrac_volume(phi_values, theta_values)
+	#### disable automatic camera reset on 'Show'
+	paraview.simple._DisableFirstRenderCameraReset()
+	args = parse_args()
+	mixfrac_volume(args)
+
+	# with cProfile.Profile() as profile:
+	# 	vortex_volume(args)
+	# profile_result = pstats.Stats(profile)
+	# profile_result.sort_stats(pstats.SortKey.TIME)
+	# profile_result.print_stats()
+	# profile_result.dump_stats('./vortex_volume.prof')
+	# snakeviz vortex_volume.prof # to visualize the profile

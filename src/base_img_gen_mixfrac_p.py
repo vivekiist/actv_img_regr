@@ -1,4 +1,4 @@
-# trace generated using paraview version 5.10.1
+# trace generated using paraview version 5.8.0
 import numpy as np
 
 #### import the simple module from the paraview
@@ -8,7 +8,7 @@ paraview.simple._DisableFirstRenderCameraReset()
 
 def mixfrac_volume(phi_values, theta_values):
 	# create a new 'XML Image Data Reader'
-	jet_mixfrac_0041dat_2_subsampledvti = XMLImageDataReader(registrationName='jet_mixfrac_0041.dat_2_subsampled.vti', FileName=['../data/mixfrac_raw/jet_mixfrac_0041.dat_2_subsampled.vti'])
+	jet_mixfrac_0041dat_2_subsampledvti = XMLImageDataReader(FileName=['../data/mixfrac_raw/jet_mixfrac_0041.dat_2_subsampled.vti'])
 	jet_mixfrac_0041dat_2_subsampledvti.PointArrayStatus = ['ImageScalars']
 
 
@@ -58,6 +58,7 @@ def mixfrac_volume(phi_values, theta_values):
 	renderView1.CameraFocalPoint = [119.49999999999984, 179.4999999999999, 29.499999999999993]
 	renderView1.CameraViewUp = [0.04789805648068396, 0.9908075834107278, -0.12651525141723785]
 	renderView1.CameraParallelScale = 217.6482253545845
+	# hide color bar/color legend
 	jet_mixfrac_0041dat_2_subsampledvtiDisplay.SetScalarBarVisibility(renderView1, False)
 
 	camera=GetActiveCamera()
@@ -70,7 +71,7 @@ def mixfrac_volume(phi_values, theta_values):
 		renderView1.Update()
 
 		all_params.append([phi_values[i],theta_values[i]])
-		outfile = '../data/mixfrac_volume_images/test/' \
+		outfile = '../data/mixfrac_volume_images/train/' \
 					+ str("{:.4f}".format(phi_values[i])) + '_' + str("{:.4f}".format(theta_values[i])) + '.png'
 		SaveScreenshot(outfile, 
 						renderView1, 
@@ -82,12 +83,12 @@ def mixfrac_volume(phi_values, theta_values):
 
 ## write the csv file with phi and theta values
 	all_params  = np.asarray(all_params)
-	np.savetxt('../data/mixfrac_volume_images/test/mixfrac_viewparams_test.csv', \
+	np.savetxt('../data/mixfrac_volume_images/train/mixfrac_viewparams_train.csv', \
 				all_params, delimiter=',')
 
 if __name__ == "__main__":
 	## regular sampled phi,theta vals
-	num_samples = 512
+	num_samples = 10000
 	## Randomly generate value
 	phi_values = np.random.uniform(-90, 90, num_samples) #phi -90,90 elevation
 	theta_values = np.random.uniform(0,360, num_samples) #theta 0 - 360 azimuth
