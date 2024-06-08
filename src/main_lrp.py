@@ -271,7 +271,7 @@ g_optimizer = optim.Adam(g_model.parameters(), lr=args.lr,
 main_logger.info('Optimizer for Generator model initialised.')
 
 # Set up the ReduceLROnPlateau scheduler
-scheduler = ReduceLROnPlateau(g_optimizer, mode='min', factor=0.5, patience=20, verbose=True)
+scheduler = ReduceLROnPlateau(g_optimizer, mode='min', factor=0.5, patience=10, verbose=True)
 main_logger.info('ReduceLROnPlateau scheduler initialised.')
 
 
@@ -517,6 +517,8 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 	test_lpips.append(epoch_lpips)
 	
 	scheduler.step(epoch_test_loss)
+	print(f"\tLearning rate for epoch {epoch} is {scheduler.get_last_lr()[0]}")
+	run_logger.info("\tLearning rate for epoch %d is %s", epoch, scheduler.get_last_lr()[0])
 	# saving...
 	if (((epoch+1) % args.check_every == 0) or (epoch == args.epochs-1)) :
 		print("=> saving checkpoint at epoch {}".format(epoch+1))
