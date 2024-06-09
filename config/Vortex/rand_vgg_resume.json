@@ -3,8 +3,8 @@
 	"no_cuda" : false,
     "data_parallel" : false,
 	"seed" : 1,
-    "root_dir_train": "../data/vortex_volume_images/4/train/",
-	"root_dir_test": "../data/vortex_volume_images/4/test/",
+    "root_dir_train": "../data/vortex_volume_images/5/train/",
+	"root_dir_test": "../data/vortex_volume_images/5/test/",
     "param_file_train" : "vortex_viewparams_train.csv",
 	"param_file_test" : "vortex_viewparams_test.csv",    
     "root_out_dir" : "../outputs/Vortex/",
@@ -34,7 +34,7 @@
     "raw_inp_file" : "../data/vortex_raw/vortex_15.vti",
 	"varname" : "ImageScalars",
 	"num_new_samples" : 100,
-	"query_strategy" : "VGG",
+	"query_strategy" : "rand_VGG",
 	"sampling_budget" : 8000
 }
 
