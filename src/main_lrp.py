@@ -97,73 +97,69 @@ def select_uncertain_samples(args, model, train_loader):
 		vparams_selected = np.dstack([phi_values, theta_values])[0]
 		vparams_selected = vparams_selected.tolist()
 		return vparams_selected
-	else:
-		with torch.no_grad():
-			for i, sample in enumerate(train_loader):
-				image = sample["image"].to(device)
-				vparams = sample["vparams"].to(device)
-				all_vparams.extend(vparams.tolist())
+	# Initialize VGG model once if needed
+	if args.query_strategy in ["VGG", "rand_VGG"]:
+		norm_mean = torch.tensor([.485, .456, .406]).view(-1, 1, 1).to(device)
+		norm_std = torch.tensor([.229, .224, .225]).view(-1, 1, 1).to(device)
+		vgg = VGG19('relu1_2').eval()
+		if args.data_parallel and torch.cuda.device_count() > 1:
+			vgg = nn.DataParallel(vgg)
+		vgg.to(device)
 
-				# Get model predictions
-				output = g_model(vparams)
+	with torch.no_grad():
+		for i, sample in enumerate(train_loader):
+			image = sample["image"].to(device)
+			vparams = sample["vparams"].to(device)
+			all_vparams.extend(vparams.tolist())
 
-				if args.query_strategy == "MSELoss":
-					uncertainty = nn.MSELoss(reduction='none')(image, output)
-					uncertainty1 = uncertainty.sum(dim=(1, 2, 3)) # sum over height,width and channels
-					num_samples = args.num_new_samples
-				elif args.query_strategy == "VGG":
-					norm_mean = torch.tensor([.485, .456, .406]).view(-1, 1, 1).to(device)
-					norm_std = torch.tensor([.229, .224, .225]).view(-1, 1, 1).to(device)
-					vgg = VGG19('relu1_2').eval()
-					if args.data_parallel and torch.cuda.device_count() > 1:
-						vgg = nn.DataParallel(vgg)
-					vgg.to(device)
-					# normalize
-					image = ((image + 1.) * .5 - norm_mean) / norm_std
-					output = ((output + 1.) * .5 - norm_mean) / norm_std
-					features = vgg(image)
-					output_features = vgg(output)
-					uncertainty = nn.MSELoss(reduction='none')(features, output_features)        
-					uncertainty1 = uncertainty.sum(dim=(1, 2, 3))
-					num_samples = args.num_new_samples
-				elif args.query_strategy =="rand_MSELoss":
-					uncertainty = nn.MSELoss(reduction='none')(image, output)
-					uncertainty1 = uncertainty.sum(dim=(1, 2, 3))
-					num_samples = round(args.num_new_samples/2)
-				elif args.query_strategy =="rand_VGG":
-					norm_mean = torch.tensor([.485, .456, .406]).view(-1, 1, 1).to(device)
-					norm_std = torch.tensor([.229, .224, .225]).view(-1, 1, 1).to(device)
-					vgg = VGG19('relu1_2').eval()
-					if args.data_parallel and torch.cuda.device_count() > 1:
-						vgg = nn.DataParallel(vgg)
-					vgg.to(device)
-					# normalize
-					image = ((image + 1.) * .5 - norm_mean) / norm_std
-					output = ((output + 1.) * .5 - norm_mean) / norm_std
-					features = vgg(image)
-					output_features = vgg(output)
-					uncertainty = nn.MSELoss(reduction='none')(features, output_features)        
-					uncertainty1 = uncertainty.sum(dim=(1, 2, 3))
-					num_samples = round(args.num_new_samples/2)
-				elif args.query_strategy =="complexity":
-					grayscale_images = transforms.functional.rgb_to_grayscale(image)
-					np_array = grayscale_images.cpu().numpy()
-					entropies = []
-					for i in range(image.shape[0]):
-						entropy = skimage.measure.shannon_entropy(np_array[i, 0]) 
-						entropies.append(entropy)
-					uncertainty1 = np.array(entropies) 
-					num_samples = args.num_new_samples
-				elif args.query_strategy =="rand_complexity":
-					grayscale_images = transforms.functional.rgb_to_grayscale(image)
-					np_array = grayscale_images.cpu().numpy()
-					entropies = []
-					for i in range(image.shape[0]):
-						entropy = skimage.measure.shannon_entropy(np_array[i, 0]) 
-						entropies.append(entropy)
-					uncertainty1 = np.array(entropies) 
-					num_samples = round(args.num_new_samples/2)
-				uncertainties.extend(uncertainty1.tolist())
+			# Get model predictions
+			output = g_model(vparams)
+
+			if args.query_strategy == "MSELoss":
+				uncertainty = nn.MSELoss(reduction='none')(image, output)
+				uncertainty1 = uncertainty.sum(dim=(1, 2, 3)) # sum over height,width and channels
+				num_samples = args.num_new_samples
+			elif args.query_strategy == "VGG":
+				# normalize
+				image = ((image + 1.) * .5 - norm_mean) / norm_std
+				output = ((output + 1.) * .5 - norm_mean) / norm_std
+				features = vgg(image)
+				output_features = vgg(output)
+				uncertainty = nn.MSELoss(reduction='none')(features, output_features)        
+				uncertainty1 = uncertainty.sum(dim=(1, 2, 3))
+				num_samples = args.num_new_samples
+			elif args.query_strategy =="rand_MSELoss":
+				uncertainty = nn.MSELoss(reduction='none')(image, output)
+				uncertainty1 = uncertainty.sum(dim=(1, 2, 3))
+				num_samples = round(args.num_new_samples/2)
+			elif args.query_strategy =="rand_VGG":
+				# normalize
+				image = ((image + 1.) * .5 - norm_mean) / norm_std
+				output = ((output + 1.) * .5 - norm_mean) / norm_std
+				features = vgg(image)
+				output_features = vgg(output)
+				uncertainty = nn.MSELoss(reduction='none')(features, output_features)        
+				uncertainty1 = uncertainty.sum(dim=(1, 2, 3))
+				num_samples = round(args.num_new_samples/2)
+			elif args.query_strategy =="complexity":
+				grayscale_images = transforms.functional.rgb_to_grayscale(image)
+				np_array = grayscale_images.cpu().numpy()
+				entropies = []
+				for i in range(image.shape[0]):
+					entropy = skimage.measure.shannon_entropy(np_array[i, 0]) 
+					entropies.append(entropy)
+				uncertainty1 = np.array(entropies) 
+				num_samples = args.num_new_samples
+			elif args.query_strategy =="rand_complexity":
+				grayscale_images = transforms.functional.rgb_to_grayscale(image)
+				np_array = grayscale_images.cpu().numpy()
+				entropies = []
+				for i in range(image.shape[0]):
+					entropy = skimage.measure.shannon_entropy(np_array[i, 0]) 
+					entropies.append(entropy)
+				uncertainty1 = np.array(entropies) 
+				num_samples = round(args.num_new_samples/2)
+			uncertainties.extend(uncertainty1.tolist())
 		# Get indices of samples with highest uncertainty
 		uncertain_indices = np.argsort(uncertainties)
 		ui_selected = uncertain_indices[-num_samples:]
@@ -178,7 +174,6 @@ def select_uncertain_samples(args, model, train_loader):
 			vparams_selected.extend(vparams_gen.tolist())
 
 		return vparams_selected
-
 
 # setup_logging()
 timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
