@@ -107,7 +107,7 @@ if __name__ == "__main__":
 	#### disable automatic camera reset on 'Show'
 	paraview.simple._DisableFirstRenderCameraReset()
 	args = parse_args()
-	mixfrac_volume(args)
+	asteroid_volume(args)
 
 	# with cProfile.Profile() as profile:
 	# 	vortex_volume(args)
