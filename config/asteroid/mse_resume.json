@@ -31,7 +31,7 @@
 	"check_every" : 50,
 	"no_active_learning" : false,
     "data_gen_script" : "./gen_img_asteroid_.py",
-    "raw_inp_file" : "../data/asteroid__raw/jet_mixfrac_0041.dat_2_subsampled.vti",
+    "raw_inp_file" : "../data/asteroid__raw/asteroid_28649.vti",
 	"varname" : "tev",
 	"num_new_samples" : 100,
 	"query_strategy" : "MSELoss",
