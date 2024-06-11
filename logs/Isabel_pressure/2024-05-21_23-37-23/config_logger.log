@@ -1,0 +1,47 @@
+2024-05-21 23:37:23,264 - INFO - utils.config_setter - Starting the load_config...
+2024-05-21 23:37:23,266 - INFO - utils.config_setter - Using file ../config/vgg_resume.json to setup configuration
+2024-05-21 23:37:23,267 - INFO - utils.config_setter - The current run configuration is as follows: 
+ {
+    "json_load": true,
+    "json_file": "../config/vgg_resume.json",
+    "_comment": "This json file provides parameter configurations.",
+    "no_cuda": false,
+    "data_parallel": true,
+    "seed": 1,
+    "root_dir_train": "../data/Isabel_pressure_volume_images/1/train/",
+    "root_dir_test": "../data/Isabel_pressure_volume_images/1/test",
+    "param_file_train": "isabel_pr_viewparams_train.csv",
+    "param_file_test": "isabel_pr_viewparams_test.csv",
+    "root_out_dir": "../outputs/Isabel_mse_active_random/",
+    "resume": 1,
+    "chkpt": "../outputs/Isabel_mse_active_random/base200ep/model/chk_99.pth.tar",
+    "dvp": 3,
+    "dvpe": 512,
+    "ch": 64,
+    "sn": 0,
+    "use_mse_loss": 1,
+    "use_vgg_loss": 1,
+    "use_gan_loss": 0,
+    "gan_loss_weight": 0.01,
+    "vgg_loss_weight": 1.0,
+    "mse_loss_weight": 1.0,
+    "lr": 0.001,
+    "d_lr": 0.001,
+    "beta1": 0.9,
+    "beta2": 0.999,
+    "batch_size": 200,
+    "start_epoch": 100,
+    "epochs": 1700,
+    "log_every": 1,
+    "check_every": 50,
+    "no_active_learning": false,
+    "data_gen_script": "./gen_img4.py",
+    "raw_inp_file": "../data/Isabel_pressure_raw/Pf25.binLE.raw_corrected_2_subsampled.vti",
+    "varname": "ImageScalars",
+    "num_new_samples": 100,
+    "query_strategy": "VGG",
+    "sampling_budget": 8000
+}
+2024-05-21 23:37:23,267 - INFO - utils.config_setter - The changes from ../config/vgg_resume.json configuration after CLI  are as follows: 
+ ['--epochs', '1700', '--batch_size', '200', '--root_dir_train', '../data/Isabel_pressure_volume_images/1/train/', '--root_dir_test', '../data/Isabel_pressure_volume_images/1/test']
+2024-05-21 23:37:23,267 - INFO - utils.config_setter - Exiting the load_config.

@@ -35,6 +35,6 @@
 	"varname" : "tev",
 	"num_new_samples" : 100,
 	"query_strategy" : "Random",
-	"sampling_budget" : 10000
+	"sampling_budget" : 8000
 }
 
