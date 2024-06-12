@@ -1,4 +1,4 @@
-# import sys
+import sys
 # import logging.config
 import os
 from datetime import datetime
@@ -300,6 +300,10 @@ if args.resume:
 		test_psnr = checkpoint["test_psnr"]
 		test_lpips = checkpoint["test_lpips"]
 		main_logger.info('Loaded epoch %s from checkpoint %s.', checkpoint["epoch"], args.chkpt)
+	else:
+		print("=> no checkpoint found at '{}'".format(args.chkpt))
+		main_logger.info('No checkpoint found at %s.', args.chkpt)	
+		sys.exit(1)
 
 # Active learning loop
 # setup logger for the run
