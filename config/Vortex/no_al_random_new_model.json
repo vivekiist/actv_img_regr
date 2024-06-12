@@ -20,7 +20,7 @@
     "gan_loss_weight" : 0.01,
     "vgg_loss_weight" : 1.0,
     "mse_loss_weight" : 1.0,
-    "lr" : 0.001,
+    "lr" : 0.0001,
     "d_lr" : 0.001,
     "beta1" : 0.9,
     "beta2" : 0.999,

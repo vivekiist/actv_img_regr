@@ -1,8 +1,8 @@
-# trace generated using paraview version 5.10.1
+# trace generated using paraview version 5.8.0
 import numpy as np
 import os
 import json
-# import pstats
+import pstats
 import cProfile
 import argparse
 
@@ -12,7 +12,7 @@ from paraview.simple import *
 
 # parse arguments
 def parse_args():
-	parser = argparse.ArgumentParser(description="View Generator for Vortex Dataset")
+	parser = argparse.ArgumentParser(description="View Generator for Isabel Velocity Dataset")
 	parser.add_argument("--inFile", required=True, type=str, help="Path of the input dataset")
 	parser.add_argument("--varName", required=True, type=str, help="Name of the input variable to be visualised")
 	parser.add_argument("--view_params", required=True, help="List of [phi_value, theta_value] pairs")
@@ -20,56 +20,70 @@ def parse_args():
 	return parser.parse_args()
 
 
-def vortex_volume(args):
+def isabel_velocity_volume(args):
 	# Extract all phi_values from phi_theta_pairs
 	phi_theta_pairs = np.array(json.loads(args.view_params))
 	phi_values = phi_theta_pairs[:, 0]
 	theta_values = phi_theta_pairs[:,1]
 	# print (phi_theta_pairs)
 	# create a new 'XML Image Data Reader'
-	vortex_15vti = XMLImageDataReader(FileName=args.inFile)
-	vortex_15vti.PointArrayStatus = [args.varName]
+	velocityf15binLEraw_corrected_2_subsampledvti = XMLImageDataReader(FileName=args.inFile)
+	velocityf15binLEraw_corrected_2_subsampledvti.PointArrayStatus = [args.varName]
 
 
 
 	## Now generate all the images and save their param values also
 	###################################################################
 	# all_params = []
-	vortex_15vti.TimeArray = 'None'
+	# Properties modified on velocityf15binLEraw_corrected_2_subsampledvti
+	velocityf15binLEraw_corrected_2_subsampledvti.TimeArray = 'None'
 
 	# get active view
 	renderView1 = GetActiveViewOrCreate('RenderView')
-
+	# get layout
+	# layout1 = GetLayout()
 	# show data in view
-	vortex_15vtiDisplay = Show(vortex_15vti, renderView1, 'UniformGridRepresentation')
+	velocityf15binLEraw_corrected_2_subsampledvtiDisplay = Show(velocityf15binLEraw_corrected_2_subsampledvti, renderView1, 'UniformGridRepresentation')
+	
+	# # init the 'PiecewiseFunction' selected for 'ScaleTransferFunction'
+	# velocityf15binLEraw_corrected_2_subsampledvtiDisplay.ScaleTransferFunction.Points = [0.0, 0.0, 0.5, 0.0, 64.10096740722656, 1.0, 0.5, 0.0]
+
+	# # init the 'PiecewiseFunction' selected for 'OpacityTransferFunction'
+	# velocityf15binLEraw_corrected_2_subsampledvtiDisplay.OpacityTransferFunction.Points = [0.0, 0.0, 0.5, 0.0, 64.10096740722656, 1.0, 0.5, 0.0]
+
+	# # init the 'Plane' selected for 'SliceFunction'
+	# velocityf15binLEraw_corrected_2_subsampledvtiDisplay.SliceFunction.Origin = [124.5, 124.5, 24.5]
+
 	# reset view to fit data
 	renderView1.ResetCamera()
 	# update the view to ensure updated data information
 	renderView1.Update()
 	# set scalar coloring
-	ColorBy(vortex_15vtiDisplay, ('POINTS', 'ImageScalars'))
+	ColorBy(velocityf15binLEraw_corrected_2_subsampledvtiDisplay, ('POINTS', 'ImageScalars'))
 	# rescale color and/or opacity maps used to include current data range
-	vortex_15vtiDisplay.RescaleTransferFunctionToDataRange(True, True)
+	velocityf15binLEraw_corrected_2_subsampledvtiDisplay.RescaleTransferFunctionToDataRange(True, True)
 	# change representation type
-	vortex_15vtiDisplay.SetRepresentationType('Volume')
+	velocityf15binLEraw_corrected_2_subsampledvtiDisplay.SetRepresentationType('Volume')
 	# get color transfer function/color map for 'ImageScalars'
 	imageScalarsLUT = GetColorTransferFunction('ImageScalars')
 	# get opacity transfer function/opacity map for 'ImageScalars'
 	imageScalarsPWF = GetOpacityTransferFunction('ImageScalars')
 	# Apply a preset using its name. Note this may not work as expected when presets have duplicate names.
-	imageScalarsLUT.ApplyPreset('Cool to Warm (Extended)', True)
+	imageScalarsLUT.ApplyPreset('Linear YGB 1211g', True)
+	# invert the transfer function
+	imageScalarsLUT.InvertTransferFunction()
 	# Hide orientation axes
 	renderView1.OrientationAxesVisibility = 0
 	# Properties modified on imageScalarsPWF
-	imageScalarsPWF.Points = [-0.004089686553925276, 0.0, 0.5, 0.0, -0.004089686553925276, 1.0, 0.5, 0.0, 64.10096740722656, 1.0, 0.5, 0.0]
+	imageScalarsPWF.Points = [-0.004089686553925276, 0.0, 0.5, 0.0, -0.004089686553925276, 0.24358974397182465, 0.5, 0.0, 57.43107986450195, 0.571794867515564, 0.5, 0.0, 64.10096740722656, 1.0, 0.5, 0.0]
 	LoadPalette(paletteName='WhiteBackground')
 	# current camera placement for renderView1
-	renderView1.CameraPosition = [-61.0608454576273, 340.6686830542822, -233.56036312283325]
-	renderView1.CameraFocalPoint = [63.49999999999998, 63.500000000000064, 63.500000000000064]
-	renderView1.CameraViewUp = [0.6493768794726011, -0.40081301564071514, -0.6462651119311817]
-	renderView1.CameraParallelScale = 109.9852262806237
-	vortex_15vtiDisplay.SetScalarBarVisibility(renderView1, False)
-
+	renderView1.CameraPosition = [162.9084902928369, 124.40258912655527, -661.2603055103629]
+	renderView1.CameraFocalPoint = [124.50000000000024, 124.50000000000004, 24.49999999999991]
+	renderView1.CameraViewUp = [-0.20620896973870328, 0.9784381638977673, -0.011688465582294767]
+	renderView1.CameraParallelScale = 177.7659978736091
+	# hide color bar/color legend
+	velocityf15binLEraw_corrected_2_subsampledvtiDisplay.SetScalarBarVisibility(renderView1, False)
 
 	camera=GetActiveCamera()
 	for i in range(len(phi_theta_pairs)):
@@ -90,19 +104,27 @@ def vortex_volume(args):
 		# undo camera
 		camera.Elevation(-phi_values[i])
 		camera.Azimuth(-theta_values[i])
+
+# ## write the csv file with phi and theta values
+# 	all_params  = np.asarray(all_params)
+# 	np.savetxt('../data/Isabel_velocity_volume_images/train2/isabel_pr_viewparams_train2.csv', \
+# 				all_params, delimiter=',')
+
 	
 #########################
+
+
+# isabel_velocity_volume(phi_values, theta_values)
 
 if __name__ == "__main__":
 	#### disable automatic camera reset on 'Show'
 	paraview.simple._DisableFirstRenderCameraReset()
 	args = parse_args()
-	vortex_volume(args)
 
 	# with cProfile.Profile() as profile:
-	# 	vortex_volume(args)
+	isabel_velocity_volume(args)
 	# profile_result = pstats.Stats(profile)
 	# profile_result.sort_stats(pstats.SortKey.TIME)
 	# profile_result.print_stats()
-	# profile_result.dump_stats('./vortex_volume.prof')
-	# snakeviz vortex_volume.prof # to visualize the profile
+	# profile_result.dump_stats('./isabel_velocity_volume.prof')
+	# snakeviz isabel_velocity_volume.prof # to visualize the profile
