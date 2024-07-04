@@ -17,6 +17,9 @@ from torch.utils.data import Dataset, DataLoader
 
 import matplotlib.pyplot as plt
 
+#phi -90,90 elevation
+#theta 0 - 360 azimuth
+
 class IsabelDataset(Dataset):
 	def __init__(self, root, param_file, train=False, test=False, transform=None):
 		self.root = root
@@ -120,7 +123,7 @@ class ToTensor(object):
 		# torch image: C X H X W
 		image = image.transpose((2, 0, 1))
 		return {"image": torch.from_numpy(image),
-						"vparams": torch.from_numpy(vparams)}
+				"vparams": torch.from_numpy(vparams)}
 
 # # dataset verification
 # from torchvision import transforms, utils

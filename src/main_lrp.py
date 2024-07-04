@@ -414,7 +414,8 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 			# theta_value = np.clip(theta_value, 0, 360)
 
 			# Wrap phi values within -90 to 90 degrees
-			phi_value = ((phi_value + 180) % 360) - 180
+			phi_value = ((phi_value + 90) % 180) - 90
+			# phi_value = ((phi_value + 180) % 360) - 180
 			# Wrap theta values within 0 to 360 degrees
 			theta_value = theta_value % 360
 

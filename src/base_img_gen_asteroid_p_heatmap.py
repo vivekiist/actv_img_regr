@@ -1,11 +1,10 @@
-# trace generated using paraview version 5.10.1
+# trace generated using paraview version 5.8.0
 import numpy as np
 
 #### import the simple module from the paraview
 from paraview.simple import *
 #### disable automatic camera reset on 'Show'
 paraview.simple._DisableFirstRenderCameraReset()
-
 
 def asteroid_volume(phi_values, theta_values):
 	# create a new 'XML Image Data Reader'
@@ -61,35 +60,37 @@ def asteroid_volume(phi_values, theta_values):
 	asteroid_28649vtiDisplay.SetScalarBarVisibility(renderView1, False)
 
 	camera=GetActiveCamera()
-	for i in range(len(phi_values)):
+	X, Y = np.meshgrid(phi_values, theta_values)
+	XY_pairs = list(zip(X.ravel(), Y.ravel()))
+	for i in range(len(XY_pairs)):
 		if i%100 == 0:
 			print ('generating sample: ' + str(i))
-		
-		# reset view to fit data bounds
+
 		renderView1.ResetCamera()
-		camera.Elevation(phi_values[i]) 
-		camera.Azimuth(theta_values[i])
+		camera.Elevation(XY_pairs[i][0]) 
+		camera.Azimuth(XY_pairs[i][1])
 		renderView1.Update()
 
-		all_params.append([phi_values[i],theta_values[i]])
-		outfile = '../data/asteroid_volume_images/train/' \
-					+ str("{:.4f}".format(phi_values[i])) + '_' + str("{:.4f}".format(theta_values[i])) + '.png'
+		all_params.append([XY_pairs[i][0],XY_pairs[i][1]])
+		outfile = '../data/asteroid_volume_images/hm/' \
+					+ str("{:.4f}".format(XY_pairs[i][0])) + '_' + str("{:.4f}".format(XY_pairs[i][1])) + '.png'
+		# save image out
 		SaveScreenshot(outfile, 
 						renderView1, 
 						ImageResolution=[128, 128], 
 						CompressionLevel='0')
 		# undo camera
-		camera.Elevation(-phi_values[i])
-		camera.Azimuth(-theta_values[i])
+		camera.Elevation(-XY_pairs[i][0])
+		camera.Azimuth(-XY_pairs[i][1])
+
 ## write the csv file with phi and theta values
 	all_params  = np.asarray(all_params)
-	np.savetxt('../data/asteroid_volume_images/train/asteroid_viewparams_train.csv', \
+	np.savetxt('../data/asteroid_volume_images/hm/asteroid_viewparams_hm.csv', \
 				all_params, delimiter=',')
 
 if __name__ == "__main__":
 	## regular sampled phi,theta vals
-	num_samples = 1024
-	## Randomly generate value
-	phi_values = np.random.uniform(-90, 90, num_samples) #phi -90,90 elevation
-	theta_values = np.random.uniform(0,360, num_samples) #theta 0 - 360 azimuth
+	num_samples = 100
+	phi_values = np.linspace(-90, 90, num_samples) #phi -90,90 elevation
+	theta_values = np.linspace(0, 360, num_samples) #theta 0 - 360 azimuth
 	asteroid_volume(phi_values, theta_values)

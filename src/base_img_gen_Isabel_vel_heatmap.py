@@ -25,17 +25,6 @@ def isabel_velocity_volume(phi_values, theta_values):
 	renderView1 = GetActiveViewOrCreate('RenderView')
 	# show data in view
 	velocityf15binLEraw_corrected_2_subsampledvtiDisplay = Show(velocityf15binLEraw_corrected_2_subsampledvti, renderView1, 'UniformGridRepresentation')
-	
-	# # init the 'PiecewiseFunction' selected for 'ScaleTransferFunction'
-	# velocityf15binLEraw_corrected_2_subsampledvtiDisplay.ScaleTransferFunction.Points = [0.0, 0.0, 0.5, 0.0, 64.10096740722656, 1.0, 0.5, 0.0]
-
-	# # init the 'PiecewiseFunction' selected for 'OpacityTransferFunction'
-	# velocityf15binLEraw_corrected_2_subsampledvtiDisplay.OpacityTransferFunction.Points = [0.0, 0.0, 0.5, 0.0, 64.10096740722656, 1.0, 0.5, 0.0]
-
-	# # init the 'Plane' selected for 'SliceFunction'
-	# velocityf15binLEraw_corrected_2_subsampledvtiDisplay.SliceFunction.Origin = [124.5, 124.5, 24.5]
-
-
 	# reset view to fit data
 	renderView1.ResetCamera()
 	# update the view to ensure updated data information
@@ -69,30 +58,32 @@ def isabel_velocity_volume(phi_values, theta_values):
 	velocityf15binLEraw_corrected_2_subsampledvtiDisplay.SetScalarBarVisibility(renderView1, False)
 
 	camera=GetActiveCamera()
-	for i in range(len(phi_values)):
+	X, Y = np.meshgrid(phi_values, theta_values)
+	XY_pairs = list(zip(X.ravel(), Y.ravel()))
+	for i in range(len(XY_pairs)):
 		if i%100 == 0:
 			print ('generating sample: ' + str(i))
 
 		renderView1.ResetCamera()
-		camera.Elevation(phi_values[i]) 
-		camera.Azimuth(theta_values[i])
+		camera.Elevation(XY_pairs[i][0]) 
+		camera.Azimuth(XY_pairs[i][1])
 		renderView1.Update()
 
-		all_params.append([phi_values[i],theta_values[i]])
-		outfile = '../data/Isabel_velocity_volume_images/train/' \
-					+ str("{:.4f}".format(phi_values[i])) + '_' + str("{:.4f}".format(theta_values[i])) + '.png'
+		all_params.append([XY_pairs[i][0],XY_pairs[i][1]])
+		outfile = '../data/Isabel_velocity_volume_images/hm/' \
+					+ str("{:.4f}".format(XY_pairs[i][0])) + '_' + str("{:.4f}".format(XY_pairs[i][1])) + '.png'
 		# save image out
 		SaveScreenshot(outfile, 
 						renderView1, 
 						ImageResolution=[128, 128], 
 						CompressionLevel='0')
 		# undo camera
-		camera.Elevation(-phi_values[i])
-		camera.Azimuth(-theta_values[i])
+		camera.Elevation(-XY_pairs[i][0])
+		camera.Azimuth(-XY_pairs[i][1])
 
 ## write the csv file with phi and theta values
 	all_params  = np.asarray(all_params)
-	np.savetxt('../data/Isabel_velocity_volume_images/train/Isabel_velocity_viewparams_train.csv', \
+	np.savetxt('../data/Isabel_velocity_volume_images/hm/Isabel_velocity_viewparams_hm.csv', \
 				all_params, delimiter=',')
 
 	
@@ -103,10 +94,10 @@ def isabel_velocity_volume(phi_values, theta_values):
 
 if __name__ == "__main__":
 	## regular sampled phi,theta vals
-	num_samples = 1024
-	## Randomly generate value
-	phi_values = np.random.uniform(-90, 90, num_samples) #phi -90,90 elevation
-	theta_values = np.random.uniform(0,360, num_samples) #theta 0 - 360 azimuth
+	num_samples = 100
+	phi_values = np.linspace(-90, 90, num_samples) #phi -90,90 elevation
+	theta_values = np.linspace(0, 360, num_samples) #theta 0 - 360 azimuth
+	
 	# with cProfile.Profile() as profile:
 	isabel_velocity_volume(phi_values, theta_values)
 	# profile_result = pstats.Stats(profile)
