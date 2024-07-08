@@ -21,14 +21,14 @@ plt.rcParams.update({
     'figure.titlesize': 26, # Figure title font size
 })
 
-loss_plots_dir = '../outputs/Vortex/comparison'
-chkpt_random = '../outputs/Vortex/rand_resume1500ep/model/chk_1499.pth.tar'
-chkpt_mse = '../outputs/Vortex/mse_resume1500ep/model/chk_1499.pth.tar'
-chkpt_rmse = '../outputs/Vortex/rand_mse_resume1500ep/model/chk_1499.pth.tar'
-chkpt_vgg = '../outputs/Vortex/vgg_resume1500ep/model/chk_1499.pth.tar'
-chkpt_rvgg = '../outputs/Vortex/rand_vgg_resume1500ep/model/chk_1499.pth.tar'
-chkpt_comp = '../outputs/Vortex/complexity_resume1500ep/model/chk_1499.pth.tar'
-chkpt_rcomp = '../outputs/Vortex/rand_complexity_1500ep/model/chk_1499.pth.tar'
+loss_plots_dir = '../../../outputs/Vortex/comparison'
+chkpt_random = '../../../outputs/Vortex/rand_resume1500ep/model/chk_1499.pth.tar'
+chkpt_mse = '../../../outputs/Vortex/mse_resume1500ep/model/chk_1499.pth.tar'
+chkpt_rmse = '../../../outputs/Vortex/rand_mse_resume1500ep/model/chk_1499.pth.tar'
+chkpt_vgg = '../../../outputs/Vortex/vgg_resume1500ep/model/chk_1499.pth.tar'
+chkpt_rvgg = '../../../outputs/Vortex/rand_vgg_resume1500ep/model/chk_1499.pth.tar'
+chkpt_comp = '../../../outputs/Vortex/complexity_resume1500ep/model/chk_1499.pth.tar'
+chkpt_rcomp = '../../../outputs/Vortex/rand_complexity_1500ep/model/chk_1499.pth.tar'
 
 def load_checkpoint(filepath):
     if os.path.isfile(filepath):

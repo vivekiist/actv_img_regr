@@ -13,22 +13,24 @@ plt.rcParams.update({
     'figure.titlesize': 26, # Figure title font size
 })
 
-loss_plots_dir = '../outputs/Mixfrac/comparison'
-chkpt_random = '../outputs/Mixfrac/random_resume1500ep/model/chk_1499.pth.tar'
-chkpt_mse = '../outputs/Mixfrac/mse_resume/model/chk_1499.pth.tar'
-chkpt_rmse = '../outputs/Mixfrac/rand_mse_resume/model/chk_1499.pth.tar'
-chkpt_vgg = '../outputs/Mixfrac/vgg_resume1500ep/model/chk_1499.pth.tar'
-chkpt_rvgg = '../outputs/Mixfrac/rand_vgg_resume1500ep/model/chk_1499.pth.tar'
-chkpt_comp = '../outputs/Mixfrac/complexity_resume1500ep/model/chk_1499.pth.tar'
-chkpt_rcomp = '../outputs/Mixfrac/rand_complexity_resume1500ep/model/chk_1499.pth.tar'
+loss_plots_dir = '../../../outputs/Isabel_velocity/comparison'
+chkpt_random = '../../../outputs/Isabel_velocity/rand_resume_1500ep/model/chk_1499.pth.tar'
+chkpt_mse = '../../../outputs/Isabel_velocity/mse_resume_1500ep/model/chk_1499.pth.tar'
+chkpt_rmse = '../../../outputs/Isabel_velocity/rand_mse_1500ep/model/chk_1499.pth.tar'
+chkpt_vgg = '../../../outputs/Isabel_velocity/vgg_resume_1500ep/model/chk_1499.pth.tar'
+chkpt_rvgg = '../../../outputs/Isabel_velocity/rand_vgg_resume_1500ep/model/chk_1499.pth.tar'
+chkpt_comp = '../../../outputs/Isabel_velocity/complexity_resume_1500ep/model/chk_1499.pth.tar'
+chkpt_rcomp = '../../../outputs/Isabel_velocity/rand_complexity_resume_1500ep/model/chk_1499.pth.tar'
 
 def load_checkpoint(filepath):
     if os.path.isfile(filepath):
-        checkpoint = torch.load(filepath)
+        device = torch.device('cuda:0')
+        checkpoint = torch.load(filepath, map_location=device)
         return checkpoint
     else:
         print(f"=> no checkpoint found at '{filepath}'")
         sys.exit(1)
+
 
 rcheckpoint = load_checkpoint(chkpt_random)
 checkpoint_mse = load_checkpoint(chkpt_mse)
@@ -85,9 +87,9 @@ epochs = list(range(101, 1500 + 1))
 # =====================================================SSIM=======================
 f_loss = plt.figure(figsize=(12, 8))
 ax_loss = f_loss.add_subplot(111)
-ax_loss.plot(epochs, test_ssim_mse[100:], label="Test SSIM for MSE", color="blue")
+# ax_loss.plot(epochs, test_ssim_mse[100:], label="Test SSIM for MSE", color="blue")
 ax_loss.plot(epochs, test_ssim_rmse[100:], label="Test SSIM for Random + MSE", color="orange")
-ax_loss.plot(epochs, test_ssim_vgg[100:], label="Test SSIM for VGG", color="green")
+# ax_loss.plot(epochs, test_ssim_vgg[100:], label="Test SSIM for VGG", color="green")
 ax_loss.plot(epochs, test_ssim_rvgg[100:], label="Test SSIM for Random + VGG", color="red")
 # ax_loss.plot(epochs, test_ssim_comp[100:], label="Test SSIM for Complexity", color="purple")
 # ax_loss.plot(epochs, test_ssim_rcomp[100:], label="Test SSIM for Random + Complexity", color="brown")
@@ -111,7 +113,7 @@ f_loss = plt.figure(figsize=(12, 8))
 ax_loss = f_loss.add_subplot(111)
 # ax_loss.plot(epochs, test_losses_mse[100:], label="Test loss for MSE", color="blue")
 ax_loss.plot(epochs, test_losses_rmse[100:], label="Test loss for Random + MSE", color="orange")
-ax_loss.plot(epochs, test_losses_vgg[100:], label="Test loss for VGG", color="green")
+# ax_loss.plot(epochs, test_losses_vgg[100:], label="Test loss for VGG", color="green")
 ax_loss.plot(epochs, test_losses_rvgg[100:], label="Test loss for Random + VGG", color="red")
 # ax_loss.plot(epochs, test_losses_comp[100:], label="Test loss for Complexity", color="purple")
 # ax_loss.plot(epochs, test_losses_rcomp[100:], label="Test loss for Random + Complexity", color="brown")
@@ -155,13 +157,13 @@ f_loss.savefig(fname, dpi = 300)
 # =====================================================LPIPS=======================
 f_loss = plt.figure(figsize=(12, 8))
 ax_loss = f_loss.add_subplot(111)
-ax_loss.plot(epochs, test_lpips_mse[100:], label="Test LPIPS for MSE", color="blue")
+# ax_loss.plot(epochs, test_lpips_mse[100:], label="Test LPIPS for MSE", color="blue")
 ax_loss.plot(epochs, test_lpips_rmse[100:], label="Test LPIPS for Random + MSE", color="orange")
-ax_loss.plot(epochs, test_lpips_vgg[100:], label="Test LPIPS for VGG", color="green")
+# ax_loss.plot(epochs, test_lpips_vgg[100:], label="Test LPIPS for VGG", color="green")
 ax_loss.plot(epochs, test_lpips_rvgg[100:], label="Test LPIPS for Random + VGG", color="red")
 # ax_loss.plot(epochs, test_lpips_comp[100:], label="Test LPIPS for Complexity", color="purple")
 # ax_loss.plot(epochs, test_lpips_rcomp[100:], label="Test LPIPS for Random + Complexity", color="brown")
-ax_loss.plot(epochs, rtest_lpips[100:], label="Test LPIPS for Random", color="purple")
+ax_loss.plot(epochs, rtest_lpips[100:], label="Test LPIPS for for Random", color="purple")
 
 ax_loss.set_xlabel("Epochs")
 ax_loss.set_ylabel("LPIPS")

@@ -13,14 +13,14 @@ plt.rcParams.update({
     'figure.titlesize': 26, # Figure title font size
 })
 
-loss_plots_dir = '../outputs/Asteroid/comparison'
-chkpt_random = '../outputs/Asteroid/rand_resume1500ep/model/chk_1499.pth.tar'
-chkpt_mse = '../outputs/Asteroid/mse_resume_1500ep/model/chk_1499.pth.tar'
-chkpt_rmse = '../outputs/Asteroid/rand_mse_resume1500ep/model/chk_1499.pth.tar'
-chkpt_vgg = '../outputs/Asteroid/vgg_resume1500ep/model/chk_1499.pth.tar'
-chkpt_rvgg = '../outputs/Asteroid/rand_vgg_resume1500ep/model/chk_1499.pth.tar'
-chkpt_comp = '../outputs/Asteroid/complexity_resume_1500ep/model/chk_1499.pth.tar'
-chkpt_rcomp = '../outputs/Asteroid/rand_complexity1500ep/model/chk_1499.pth.tar'
+loss_plots_dir = '../../../outputs/Asteroid/comparison'
+chkpt_random = '../../../outputs/Asteroid/rand_resume1500ep/model/chk_1499.pth.tar'
+chkpt_mse = '../../../outputs/Asteroid/mse_resume_1500ep/model/chk_1499.pth.tar'
+chkpt_rmse = '../../../outputs/Asteroid/rand_mse_resume1500ep/model/chk_1499.pth.tar'
+chkpt_vgg = '../../../outputs/Asteroid/vgg_resume1500ep/model/chk_1499.pth.tar'
+chkpt_rvgg = '../../../outputs/Asteroid/rand_vgg_resume1500ep/model/chk_1499.pth.tar'
+chkpt_comp = '../../../outputs/Asteroid/complexity_resume_1500ep/model/chk_1499.pth.tar'
+chkpt_rcomp = '../../../outputs/Asteroid/rand_complexity1500ep/model/chk_1499.pth.tar'
 
 def load_checkpoint(filepath):
     if os.path.isfile(filepath):
