@@ -1,56 +1,58 @@
 # trace generated using paraview version 5.8.0
 import numpy as np
+import pstats
+import cProfile
 
 #### import the simple module from the paraview
 from paraview.simple import *
 #### disable automatic camera reset on 'Show'
 paraview.simple._DisableFirstRenderCameraReset()
 
-def vortex_volume(phi_values, theta_values):
+def isabel_pressure_volume(phi_values, theta_values):
 	# create a new 'XML Image Data Reader'
-	vortex_15vti = XMLImageDataReader(FileName=['../data/vortex_raw/vortex_15.vti'])
-	vortex_15vti.PointArrayStatus = ['ImageScalars']
+	pf25binLEraw_corrected_2_subsampledvti = XMLImageDataReader(FileName=['../../../data/Isabel_pressure_raw/Pf25.binLE.raw_corrected_2_subsampled.vti'])
+	pf25binLEraw_corrected_2_subsampledvti.PointArrayStatus = ['ImageScalars']
+
 
 
 	## Now generate all the images and save their param values also
 	###################################################################
 	all_params = []
-	# Properties modified on vortex_15vti
-	vortex_15vti.TimeArray = 'None'
+
 
 	# get active view
 	renderView1 = GetActiveViewOrCreate('RenderView')
-
+	# get layout
+	layout1 = GetLayout()
 	# show data in view
-	vortex_15vtiDisplay = Show(vortex_15vti, renderView1, 'UniformGridRepresentation')
+	pf25binLEraw_corrected_2_subsampledvtiDisplay = Show(pf25binLEraw_corrected_2_subsampledvti, renderView1, 'UniformGridRepresentation')
 	# reset view to fit data
 	renderView1.ResetCamera()
 	# update the view to ensure updated data information
 	renderView1.Update()
 	# set scalar coloring
-	ColorBy(vortex_15vtiDisplay, ('POINTS', 'ImageScalars'))
+	ColorBy(pf25binLEraw_corrected_2_subsampledvtiDisplay, ('POINTS', 'ImageScalars'))
 	# rescale color and/or opacity maps used to include current data range
-	vortex_15vtiDisplay.RescaleTransferFunctionToDataRange(True, True)
+	pf25binLEraw_corrected_2_subsampledvtiDisplay.RescaleTransferFunctionToDataRange(True, True)
 	# change representation type
-	vortex_15vtiDisplay.SetRepresentationType('Volume')
+	pf25binLEraw_corrected_2_subsampledvtiDisplay.SetRepresentationType('Volume')
 	# get color transfer function/color map for 'ImageScalars'
 	imageScalarsLUT = GetColorTransferFunction('ImageScalars')
 	# get opacity transfer function/opacity map for 'ImageScalars'
 	imageScalarsPWF = GetOpacityTransferFunction('ImageScalars')
 	# Apply a preset using its name. Note this may not work as expected when presets have duplicate names.
-	imageScalarsLUT.ApplyPreset('Cool to Warm (Extended)', True)
+	imageScalarsLUT.ApplyPreset('Spectral_lowBlue', True)
 	# Hide orientation axes
 	renderView1.OrientationAxesVisibility = 0
 	# Properties modified on imageScalarsPWF
-	imageScalarsPWF.Points = [-0.004089686553925276, 0.0, 0.5, 0.0, -0.004089686553925276, 1.0, 0.5, 0.0, 64.10096740722656, 1.0, 0.5, 0.0]
+	imageScalarsPWF.Points = [-4931.54248046875, 0.0, 0.5, 0.0, -4931.54248046875, 1.0, 0.5, 0.0, 0.0, 0.18717949092388153, 0.5, 0.0, 2594.9736328125, 1.0, 0.5, 0.0]
 	LoadPalette(paletteName='WhiteBackground')
 	# current camera placement for renderView1
-	renderView1.CameraPosition = [-61.0608454576273, 340.6686830542822, -233.56036312283325]
-	renderView1.CameraFocalPoint = [63.49999999999998, 63.500000000000064, 63.500000000000064]
-	renderView1.CameraViewUp = [0.6493768794726011, -0.40081301564071514, -0.6462651119311817]
-	renderView1.CameraParallelScale = 109.9852262806237
-	# hide color bar/color legend
-	vortex_15vtiDisplay.SetScalarBarVisibility(renderView1, False)
+	renderView1.CameraPosition = [114.58039117050782, 83.61589529485812, -661.0454102918769]
+	renderView1.CameraFocalPoint = [124.5, 124.5, 24.5]
+	renderView1.CameraViewUp = [0.02610772339687559, 0.9978636428814608, -0.05988770319834204]
+	renderView1.CameraParallelScale = 177.7659978736091
+
 
 	camera=GetActiveCamera()
 	X, Y = np.meshgrid(phi_values, theta_values)
@@ -65,7 +67,7 @@ def vortex_volume(phi_values, theta_values):
 		renderView1.Update()
 
 		all_params.append([XY_pairs[i][0],XY_pairs[i][1]])
-		outfile = '../data/vortex_volume_images/hm/' \
+		outfile = '../../../data/Isabel_pressure_volume_images/hm/' \
 					+ str("{:.4f}".format(XY_pairs[i][0])) + '_' + str("{:.4f}".format(XY_pairs[i][1])) + '.png'
 		# save image out
 		SaveScreenshot(outfile, 
@@ -78,12 +80,25 @@ def vortex_volume(phi_values, theta_values):
 
 ## write the csv file with phi and theta values
 	all_params  = np.asarray(all_params)
-	np.savetxt('../data/vortex_volume_images/hm/vortex_viewparams_hm.csv', \
+	np.savetxt('../../../data/Isabel_pressure_volume_images/hm/isabel_pr_viewparams_hm.csv', \
 				all_params, delimiter=',')
+
+	
+#########################
+
+
+# isabel_pressure_volume(phi_values, theta_values)
 
 if __name__ == "__main__":
 	## regular sampled phi,theta vals
 	num_samples = 100
 	phi_values = np.linspace(-90, 90, num_samples) #phi -90,90 elevation
 	theta_values = np.linspace(0, 360, num_samples) #theta 0 - 360 azimuth
-	vortex_volume(phi_values, theta_values)
+	
+	# with cProfile.Profile() as profile:
+	isabel_pressure_volume(phi_values, theta_values)
+	# profile_result = pstats.Stats(profile)
+	# profile_result.sort_stats(pstats.SortKey.TIME)
+	# # profile_result.print_stats()
+	# profile_result.dump_stats('isabel_pressure_volume.prof')
+	# snakeviz isabel_pressure_volume.prof # to visualize the profile
