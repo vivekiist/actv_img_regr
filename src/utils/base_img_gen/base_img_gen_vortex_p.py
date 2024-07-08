@@ -8,7 +8,7 @@ paraview.simple._DisableFirstRenderCameraReset()
 
 def vortex_volume(phi_values, theta_values):
 	# create a new 'XML Image Data Reader'
-	vortex_15vti = XMLImageDataReader(FileName=['../data/vortex_raw/vortex_15.vti'])
+	vortex_15vti = XMLImageDataReader(FileName=['../../../data/vortex_raw/vortex_15.vti'])
 	vortex_15vti.PointArrayStatus = ['ImageScalars']
 
 
@@ -62,7 +62,7 @@ def vortex_volume(phi_values, theta_values):
 		renderView1.Update()
 
 		all_params.append([phi_values[i],theta_values[i]])
-		outfile = '../data/vortex_volume_images/train/' \
+		outfile = '../../../data/vortex_volume_images/train/' \
 					+ str("{:.4f}".format(phi_values[i])) + '_' + str("{:.4f}".format(theta_values[i])) + '.png'
 		SaveScreenshot(outfile, 
 						renderView1, 
@@ -74,8 +74,10 @@ def vortex_volume(phi_values, theta_values):
 
 ## write the csv file with phi and theta values
 	all_params  = np.asarray(all_params)
-	np.savetxt('../data/vortex_volume_images/train/vortex_viewparams_train.csv', \
+	np.savetxt('../../../data/vortex_volume_images/train/vortex_viewparams_train.csv', \
 				all_params, delimiter=',')
+	
+#########################
 
 if __name__ == "__main__":
 	## regular sampled phi,theta vals

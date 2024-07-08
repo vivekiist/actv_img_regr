@@ -8,7 +8,7 @@ paraview.simple._DisableFirstRenderCameraReset()
 
 def mixfrac_volume(phi_values, theta_values):
 	# create a new 'XML Image Data Reader'
-	jet_mixfrac_0041dat_2_subsampledvti = XMLImageDataReader(FileName=['../data/mixfrac_raw/jet_mixfrac_0041.dat_2_subsampled.vti'])
+	jet_mixfrac_0041dat_2_subsampledvti = XMLImageDataReader(FileName=['../../../data/mixfrac_raw/jet_mixfrac_0041.dat_2_subsampled.vti'])
 	jet_mixfrac_0041dat_2_subsampledvti.PointArrayStatus = ['ImageScalars']
 
 
@@ -71,7 +71,7 @@ def mixfrac_volume(phi_values, theta_values):
 		renderView1.Update()
 
 		all_params.append([phi_values[i],theta_values[i]])
-		outfile = '../data/mixfrac_volume_images/train/' \
+		outfile = '../../../data/mixfrac_volume_images/train/' \
 					+ str("{:.4f}".format(phi_values[i])) + '_' + str("{:.4f}".format(theta_values[i])) + '.png'
 		SaveScreenshot(outfile, 
 						renderView1, 
@@ -83,8 +83,10 @@ def mixfrac_volume(phi_values, theta_values):
 
 ## write the csv file with phi and theta values
 	all_params  = np.asarray(all_params)
-	np.savetxt('../data/mixfrac_volume_images/train/mixfrac_viewparams_train.csv', \
+	np.savetxt('../../../data/mixfrac_volume_images/train/mixfrac_viewparams_train.csv', \
 				all_params, delimiter=',')
+	
+#########################
 
 if __name__ == "__main__":
 	## regular sampled phi,theta vals

@@ -10,7 +10,7 @@ paraview.simple._DisableFirstRenderCameraReset()
 
 def isabel_pressure_volume(phi_values, theta_values):
 	# create a new 'XML Image Data Reader'
-	pf25binLEraw_corrected_2_subsampledvti = XMLImageDataReader(FileName=['../data/Isabel_pressure_raw/Pf25.binLE.raw_corrected_2_subsampled.vti'])
+	pf25binLEraw_corrected_2_subsampledvti = XMLImageDataReader(FileName=['../../../data/Isabel_pressure_raw/Pf25.binLE.raw_corrected_2_subsampled.vti'])
 	pf25binLEraw_corrected_2_subsampledvti.PointArrayStatus = ['ImageScalars']
 
 
@@ -65,7 +65,7 @@ def isabel_pressure_volume(phi_values, theta_values):
 		renderView1.Update()
 
 		all_params.append([phi_values[i],theta_values[i]])
-		outfile = '../data/Isabel_pressure_volume_images/train/' \
+		outfile = '../../../data/Isabel_pressure_volume_images/train/' \
 					+ str("{:.4f}".format(phi_values[i])) + '_' + str("{:.4f}".format(theta_values[i])) + '.png'
 		# save image out
 		SaveScreenshot(outfile, 
@@ -78,14 +78,10 @@ def isabel_pressure_volume(phi_values, theta_values):
 
 ## write the csv file with phi and theta values
 	all_params  = np.asarray(all_params)
-	np.savetxt('../data/Isabel_pressure_volume_images/train/isabel_pr_viewparams_train.csv', \
+	np.savetxt('../../../data/Isabel_pressure_volume_images/train/Isabel_pressure_viewparams_train.csv', \
 				all_params, delimiter=',')
 
-	
 #########################
-
-
-# isabel_pressure_volume(phi_values, theta_values)
 
 if __name__ == "__main__":
 	## regular sampled phi,theta vals
@@ -93,10 +89,11 @@ if __name__ == "__main__":
 	## Randomly generate value
 	phi_values = np.random.uniform(-90, 90, num_samples) #phi -90,90 elevation
 	theta_values = np.random.uniform(0,360, num_samples) #theta 0 - 360 azimuth
-	# with cProfile.Profile() as profile:
 	isabel_pressure_volume(phi_values, theta_values)
-	# profile_result = pstats.Stats(profile)
-	# profile_result.sort_stats(pstats.SortKey.TIME)
-	# # profile_result.print_stats()
-	# profile_result.dump_stats('isabel_pressure_volume.prof')
-	# snakeviz isabel_pressure_volume.prof # to visualize the profile
+	# with cProfile.Profile() as profile:
+	# 	isabel_pressure_volume(phi_values, theta_values)
+	# 	profile_result = pstats.Stats(profile)
+	# 	profile_result.sort_stats(pstats.SortKey.TIME)
+	# 	# profile_result.print_stats()
+	# 	profile_result.dump_stats('isabel_pressure_volume.prof')
+	# 	# snakeviz isabel_pressure_volume.prof # to visualize the profile

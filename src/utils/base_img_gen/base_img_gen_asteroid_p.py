@@ -9,7 +9,7 @@ paraview.simple._DisableFirstRenderCameraReset()
 
 def asteroid_volume(phi_values, theta_values):
 	# create a new 'XML Image Data Reader'
-	asteroid_28649vti = XMLImageDataReader(registrationName='Asteroid_28649.vti', FileName=['../data/asteroid_raw/Asteroid_28649.vti'])
+	asteroid_28649vti = XMLImageDataReader(registrationName='Asteroid_28649.vti', FileName=['../../../data/asteroid_raw/Asteroid_28649.vti'])
 	asteroid_28649vti.PointArrayStatus = ['tev', 'v02', 'v03']
 
 
@@ -72,7 +72,7 @@ def asteroid_volume(phi_values, theta_values):
 		renderView1.Update()
 
 		all_params.append([phi_values[i],theta_values[i]])
-		outfile = '../data/asteroid_volume_images/train/' \
+		outfile = '../../../data/asteroid_volume_images/train/' \
 					+ str("{:.4f}".format(phi_values[i])) + '_' + str("{:.4f}".format(theta_values[i])) + '.png'
 		SaveScreenshot(outfile, 
 						renderView1, 
@@ -81,10 +81,12 @@ def asteroid_volume(phi_values, theta_values):
 		# undo camera
 		camera.Elevation(-phi_values[i])
 		camera.Azimuth(-theta_values[i])
-## write the csv file with phi and theta values
+	## write the csv file with phi and theta values
 	all_params  = np.asarray(all_params)
-	np.savetxt('../data/asteroid_volume_images/train/asteroid_viewparams_train.csv', \
+	np.savetxt('../../../data/asteroid_volume_images/train/asteroid_viewparams_train.csv', \
 				all_params, delimiter=',')
+
+#########################
 
 if __name__ == "__main__":
 	## regular sampled phi,theta vals
