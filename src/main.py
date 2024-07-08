@@ -1,4 +1,4 @@
-# import sys
+import sys
 # import logging.config
 import os
 from datetime import datetime
@@ -20,6 +20,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.autograd import Variable
 from torch.utils.data import Dataset, DataLoader
 from torchvision.utils import save_image
@@ -64,10 +65,10 @@ def add_sn(m):
 		return m
 
 def genRandList(start, end, num):
-    res = []
-    for j in range(num): 
-        res.append(random.uniform(start, end)) 
-    return res 
+	res = []
+	for j in range(num): 
+		res.append(random.uniform(start, end)) 
+	return res 
 
 def vparams2azel(vparams):
 	azel = []
@@ -96,73 +97,69 @@ def select_uncertain_samples(args, model, train_loader):
 		vparams_selected = np.dstack([phi_values, theta_values])[0]
 		vparams_selected = vparams_selected.tolist()
 		return vparams_selected
-	else:
-		with torch.no_grad():
-			for i, sample in enumerate(train_loader):
-				image = sample["image"].to(device)
-				vparams = sample["vparams"].to(device)
-				all_vparams.extend(vparams.tolist())
+	# Initialize VGG model once if needed
+	if args.query_strategy in ["VGG", "rand_VGG"]:
+		norm_mean = torch.tensor([.485, .456, .406]).view(-1, 1, 1).to(device)
+		norm_std = torch.tensor([.229, .224, .225]).view(-1, 1, 1).to(device)
+		vgg = VGG19('relu1_2').eval()
+		if args.data_parallel and torch.cuda.device_count() > 1:
+			vgg = nn.DataParallel(vgg)
+		vgg.to(device)
 
-				# Get model predictions
-				output = g_model(vparams)
+	with torch.no_grad():
+		for i, sample in enumerate(train_loader):
+			image = sample["image"].to(device)
+			vparams = sample["vparams"].to(device)
+			all_vparams.extend(vparams.tolist())
 
-				if args.query_strategy == "MSELoss":
-					uncertainty = nn.MSELoss(reduction='none')(image, output)
-					uncertainty1 = uncertainty.sum(dim=(1, 2, 3)) # sum over height,width and channels
-					num_samples = args.num_new_samples
-				elif args.query_strategy == "VGG":
-					norm_mean = torch.tensor([.485, .456, .406]).view(-1, 1, 1).to(device)
-					norm_std = torch.tensor([.229, .224, .225]).view(-1, 1, 1).to(device)
-					vgg = VGG19('relu1_2').eval()
-					if args.data_parallel and torch.cuda.device_count() > 1:
-						vgg = nn.DataParallel(vgg)
-					vgg.to(device)
-					# normalize
-					image = ((image + 1.) * .5 - norm_mean) / norm_std
-					output = ((output + 1.) * .5 - norm_mean) / norm_std
-					features = vgg(image)
-					output_features = vgg(output)
-					uncertainty = nn.MSELoss(reduction='none')(features, output_features)        
-					uncertainty1 = uncertainty.sum(dim=(1, 2, 3))
-					num_samples = args.num_new_samples
-				elif args.query_strategy =="rand_MSELoss":
-					uncertainty = nn.MSELoss(reduction='none')(image, output)
-					uncertainty1 = uncertainty.sum(dim=(1, 2, 3))
-					num_samples = round(args.num_new_samples/2)
-				elif args.query_strategy =="rand_VGG":
-					norm_mean = torch.tensor([.485, .456, .406]).view(-1, 1, 1).to(device)
-					norm_std = torch.tensor([.229, .224, .225]).view(-1, 1, 1).to(device)
-					vgg = VGG19('relu1_2').eval()
-					if args.data_parallel and torch.cuda.device_count() > 1:
-						vgg = nn.DataParallel(vgg)
-					vgg.to(device)
-					# normalize
-					image = ((image + 1.) * .5 - norm_mean) / norm_std
-					output = ((output + 1.) * .5 - norm_mean) / norm_std
-					features = vgg(image)
-					output_features = vgg(output)
-					uncertainty = nn.MSELoss(reduction='none')(features, output_features)        
-					uncertainty1 = uncertainty.sum(dim=(1, 2, 3))
-					num_samples = round(args.num_new_samples/2)
-				elif args.query_strategy =="complexity":
-					grayscale_images = transforms.functional.rgb_to_grayscale(image)
-					np_array = grayscale_images.cpu().numpy()
-					entropies = []
-					for i in range(image.shape[0]):
-						entropy = skimage.measure.shannon_entropy(np_array[i, 0]) 
-						entropies.append(entropy)
-					uncertainty1 = np.array(entropies) 
-					num_samples = args.num_new_samples
-				elif args.query_strategy =="rand_complexity":
-					grayscale_images = transforms.functional.rgb_to_grayscale(image)
-					np_array = grayscale_images.cpu().numpy()
-					entropies = []
-					for i in range(image.shape[0]):
-						entropy = skimage.measure.shannon_entropy(np_array[i, 0]) 
-						entropies.append(entropy)
-					uncertainty1 = np.array(entropies) 
-					num_samples = round(args.num_new_samples/2)
-				uncertainties.extend(uncertainty1.tolist())
+			# Get model predictions
+			output = g_model(vparams)
+
+			if args.query_strategy == "MSELoss":
+				uncertainty = nn.MSELoss(reduction='none')(image, output)
+				uncertainty1 = uncertainty.sum(dim=(1, 2, 3)) # sum over height,width and channels
+				num_samples = args.num_new_samples
+			elif args.query_strategy == "VGG":
+				# normalize
+				image = ((image + 1.) * .5 - norm_mean) / norm_std
+				output = ((output + 1.) * .5 - norm_mean) / norm_std
+				features = vgg(image)
+				output_features = vgg(output)
+				uncertainty = nn.MSELoss(reduction='none')(features, output_features)        
+				uncertainty1 = uncertainty.sum(dim=(1, 2, 3))
+				num_samples = args.num_new_samples
+			elif args.query_strategy =="rand_MSELoss":
+				uncertainty = nn.MSELoss(reduction='none')(image, output)
+				uncertainty1 = uncertainty.sum(dim=(1, 2, 3))
+				num_samples = round(args.num_new_samples/2)
+			elif args.query_strategy =="rand_VGG":
+				# normalize
+				image = ((image + 1.) * .5 - norm_mean) / norm_std
+				output = ((output + 1.) * .5 - norm_mean) / norm_std
+				features = vgg(image)
+				output_features = vgg(output)
+				uncertainty = nn.MSELoss(reduction='none')(features, output_features)        
+				uncertainty1 = uncertainty.sum(dim=(1, 2, 3))
+				num_samples = round(args.num_new_samples/2)
+			elif args.query_strategy =="complexity":
+				grayscale_images = transforms.functional.rgb_to_grayscale(image)
+				np_array = grayscale_images.cpu().numpy()
+				entropies = []
+				for i in range(image.shape[0]):
+					entropy = skimage.measure.shannon_entropy(np_array[i, 0]) 
+					entropies.append(entropy)
+				uncertainty1 = np.array(entropies) 
+				num_samples = args.num_new_samples
+			elif args.query_strategy =="rand_complexity":
+				grayscale_images = transforms.functional.rgb_to_grayscale(image)
+				np_array = grayscale_images.cpu().numpy()
+				entropies = []
+				for i in range(image.shape[0]):
+					entropy = skimage.measure.shannon_entropy(np_array[i, 0]) 
+					entropies.append(entropy)
+				uncertainty1 = np.array(entropies) 
+				num_samples = round(args.num_new_samples/2)
+			uncertainties.extend(uncertainty1.tolist())
 		# Get indices of samples with highest uncertainty
 		uncertain_indices = np.argsort(uncertainties)
 		ui_selected = uncertain_indices[-num_samples:]
@@ -177,7 +174,6 @@ def select_uncertain_samples(args, model, train_loader):
 			vparams_selected.extend(vparams_gen.tolist())
 
 		return vparams_selected
-
 
 # setup_logging()
 timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -201,26 +197,26 @@ torch.manual_seed(args.seed)
 
 # dataset creation
 train_dataset = IsabelDataset(
-    root=args.root_dir_train,
+	root=args.root_dir_train,
 	param_file = args.param_file_train,
-    train=True,
-    test=False,
-    transform=transforms.Compose([Normalize(), ToTensor()]))
+	train=True,
+	test=False,
+	transform=transforms.Compose([Normalize(), ToTensor()]))
 main_logger.info('Train dataset created.')
 
 test_dataset = IsabelDataset(
-    root=args.root_dir_test,
+	root=args.root_dir_test,
 	param_file = args.param_file_test,
-    train=False,
-    test=True,
-    transform=transforms.Compose([Normalize(), ToTensor()]))
+	train=False,
+	test=True,
+	transform=transforms.Compose([Normalize(), ToTensor()]))
 main_logger.info('Test dataset created.')
 
 kwargs = {"num_workers": 8, "pin_memory": True} if args.cuda else {}
 train_loader = DataLoader(train_dataset, batch_size=args.batch_size,
-                        shuffle=True, **kwargs)
+						shuffle=True, **kwargs)
 test_loader = DataLoader(test_dataset, batch_size=args.batch_size,
-                        shuffle=True, **kwargs)
+						shuffle=True, **kwargs)
 main_logger.info('Train & Test dataloader created.')
 
 # model
@@ -269,6 +265,11 @@ g_optimizer = optim.Adam(g_model.parameters(), lr=args.lr,
 						betas=(args.beta1, args.beta2))
 main_logger.info('Optimizer for Generator model initialised.')
 
+# Set up the ReduceLROnPlateau scheduler
+scheduler = ReduceLROnPlateau(g_optimizer, mode='min', factor=0.5, patience=10)
+main_logger.info('ReduceLROnPlateau scheduler initialised.')
+
+
 if args.use_gan_loss:
 	d_optimizer = optim.Adam(d_model.parameters(), lr=args.d_lr,
 							betas=(args.beta1, args.beta2))
@@ -299,6 +300,10 @@ if args.resume:
 		test_psnr = checkpoint["test_psnr"]
 		test_lpips = checkpoint["test_lpips"]
 		main_logger.info('Loaded epoch %s from checkpoint %s.', checkpoint["epoch"], args.chkpt)
+	else:
+		print("=> no checkpoint found at '{}'".format(args.chkpt))
+		main_logger.info('No checkpoint found at %s.', args.chkpt)	
+		sys.exit(1)
 
 # Active learning loop
 # setup logger for the run
@@ -382,9 +387,9 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 	print(f"\n====> Epoch: {epoch} Train loss: \t\t\t{epoch_loss:.4f}")
 	run_logger.info('====> Epoch: %d Train loss: \t\t\t\t\t%.4f\n', epoch, epoch_loss)
 	train_losses.append(epoch_loss)
-    ##########################################
-    ## Active learning section
-    ##########################################
+	##########################################
+	## Active learning section
+	##########################################
 	if (not args.no_active_learning) and (len(train_dataset) < args.sampling_budget):
 		# select uncertain samples
 		print("Selecting samples for generation")	
@@ -409,7 +414,8 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 			# theta_value = np.clip(theta_value, 0, 360)
 
 			# Wrap phi values within -90 to 90 degrees
-			phi_value = ((phi_value + 180) % 360) - 180
+			phi_value = ((phi_value + 90) % 180) - 90
+			# phi_value = ((phi_value + 180) % 360) - 180
 			# Wrap theta values within 0 to 360 degrees
 			theta_value = theta_value % 360
 
@@ -509,6 +515,10 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 	test_ssim.append(epoch_ssim)
 	test_psnr.append(epoch_psnr)
 	test_lpips.append(epoch_lpips)
+	
+	scheduler.step(epoch_test_loss)
+	print(f"\tLearning rate for epoch {epoch} is {scheduler.get_last_lr()[0]}")
+	run_logger.info("\tLearning rate for epoch %d is %s", epoch, scheduler.get_last_lr()[0])
 	# saving...
 	if (((epoch+1) % args.check_every == 0) or (epoch == args.epochs-1)) :
 		print("=> saving checkpoint at epoch {}".format(epoch+1))
@@ -729,7 +739,7 @@ for epoch in tqdm(range(args.start_epoch, args.epochs)):
 				real_images = image[j*10:(j+1)*10]
 				fake_images = fake_image[j*10:(j+1)*10]
 				comparison = torch.cat((comparison, real_images, fake_images), dim=0)
-		    
+			
 			fname = os.path.join(comparison_dir, f'test_batch_{i}.png')
 			save_image(((comparison.cpu() + 1.) * 0.5), fname, nrow=10)					  
 
